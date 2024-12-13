@@ -23,6 +23,7 @@ class MainCityLinkApp extends StatelessWidget {
     );  
   }
 }
+
 class SplashScreen extends StatelessWidget {
-  const SplashScreen();
+  const SplashScreen({super.key});
 }
