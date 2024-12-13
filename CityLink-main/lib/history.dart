@@ -61,8 +61,7 @@ class _ComplaintHistoryScreenState extends State<ComplaintHistoryScreen> {
                 }).toList();
 
                 if (complaints.isEmpty) {
-                  return const Center(
-                      child: Text("No complaints match your filters."));
+                  return const Center(child: Text("No complaints match your filters."));
                 }
 
                 return ListView.builder(
@@ -70,8 +69,7 @@ class _ComplaintHistoryScreenState extends State<ComplaintHistoryScreen> {
                   itemBuilder: (context, index) {
                     final complaint = complaints[index];
                     return Card(
-                      margin: const EdgeInsets.symmetric(
-                          horizontal: 10.0, vertical: 5.0),
+                      margin: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
                       child: ListTile(
                         leading: Icon(
                           _getIconForComplaintType(complaint['complaint_type']),
@@ -189,10 +187,7 @@ class ComplaintDetailScreen extends StatelessWidget {
         title: const Text("Complaint Details"),
       ),
       body: FutureBuilder<DocumentSnapshot>(
-        future: FirebaseFirestore.instance
-            .collection('Complaints')
-            .doc(complaintId)
-            .get(),
+        future: FirebaseFirestore.instance.collection('Complaints').doc(complaintId).get(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -222,8 +217,7 @@ class ComplaintDetailScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => VideoPlayerScreen(
-                              videoUrl: complaint['video_url']),
+                          builder: (context) => VideoPlayerScreen(videoUrl: complaint['video_url']),
                         ),
                       );
                     },
@@ -235,8 +229,7 @@ class ComplaintDetailScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => AudioPlayerScreen(
-                              audioUrl: complaint['voice_url']),
+                          builder: (context) => AudioPlayerScreen(audioUrl: complaint['voice_url']),
                         ),
                       );
                     },
@@ -254,8 +247,7 @@ class ComplaintDetailScreen extends StatelessWidget {
                 ),
                 ListTile(
                   title: const Text("Submitted At"),
-                  subtitle:
-                      Text(_formatRelativeTime(complaint['submitted_at'])),
+                  subtitle: Text(_formatRelativeTime(complaint['submitted_at'])),
                 ),
               ],
             ),
@@ -312,9 +304,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           setState(() {
-            _controller.value.isPlaying
-                ? _controller.pause()
-                : _controller.play();
+            _controller.value.isPlaying ? _controller.pause() : _controller.play();
           });
         },
         child: Icon(
