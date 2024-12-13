@@ -19,7 +19,7 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
     _complaintsStream = FirebaseFirestore.instance
         .collection('Municipalities')
         .doc(widget.municipalityId)
-        .collection('complaints')
+        .collection('Complaints')
         .orderBy('createdAt', descending: true)
         .snapshots();
 
@@ -32,7 +32,7 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
       await FirebaseFirestore.instance
           .collection('Municipalities')
           .doc(widget.municipalityId)
-          .collection('complaints')
+          .collection('Complaints')
           .doc(complaintId)
           .update({
         'status': 'resolved',
