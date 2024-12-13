@@ -9,14 +9,12 @@ class myPhone extends StatefulWidget {
 }
 
 class _myPhoneState extends State<myPhone> {
-  final _countryCodeController =
-      TextEditingController(text: '+977'); // Default country code
+  final _countryCodeController = TextEditingController(text: '+977'); // Default country code
   final _phoneNumberController = TextEditingController();
   String _verificationId = '';
 
   Future<void> _sendOtp() async {
-    String phoneNumber =
-        _countryCodeController.text + _phoneNumberController.text.trim();
+    String phoneNumber = _countryCodeController.text + _phoneNumberController.text.trim();
 
     try {
       await FirebaseAuth.instance.verifyPhoneNumber(
@@ -30,14 +28,14 @@ class _myPhoneState extends State<myPhone> {
         },
         codeSent: (String verificationId, int? resendToken) {
           setState(() => _verificationId = verificationId);
-          Navigator.pushNamed(
-            context,
-            '/otp',
-            arguments: {
-              'verificationId': verificationId,
-              'phoneNumber': phoneNumber, // Pass the phone number here
-            },
-          );
+Navigator.pushNamed(
+  context,
+  '/otp',
+  arguments: {
+    'verificationId': verificationId,
+    'phoneNumber': phoneNumber, // Pass the phone number here
+  },
+);
         },
         codeAutoRetrievalTimeout: (String verificationId) {
           _verificationId = verificationId;
@@ -48,9 +46,9 @@ class _myPhoneState extends State<myPhone> {
     }
   }
 
+
   void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -63,8 +61,7 @@ class _myPhoneState extends State<myPhone> {
           children: [
             Image.asset('assets/img1.png', width: 150, height: 150),
             const SizedBox(height: 25),
-            const Text('Phone Verification',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            const Text('Phone Verification', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
             const Text(
               'We need to register your phone before starting',
@@ -77,12 +74,10 @@ class _myPhoneState extends State<myPhone> {
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green.shade700,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
               onPressed: _sendOtp,
-              child:
-                  const Text('Send OTP', style: TextStyle(color: Colors.white)),
+              child: const Text('Send OTP', style: TextStyle(color: Colors.white)),
             ),
           ],
         ),
