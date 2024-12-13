@@ -57,8 +57,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -112,40 +111,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             Navigator.pushNamed(context, '/complaint_box');
                           },
                         ),
-                        _buildDashboardItem(
-                          title: 'Notifications',
-                          icon: Icons.notifications,
-                          onTap: () {
-                            Navigator.pushNamed(context, '/notifications');
-                          },
-                        ),
+_buildDashboardItem(
+  title: 'Notifications',
+  icon: Icons.notifications,
+  onTap: () {
+    Navigator.pushNamed(context, '/notifications');
+  },
+),
 
                         _buildDashboardItem(
                           title: 'Profile',
                           icon: Icons.person,
                           onTap: () {
-                            Navigator.pushNamed(context, '/profile',
-                                arguments: _userData);
+                            Navigator.pushNamed(context, '/profile', arguments: _userData);
                           },
                         ),
-                        _buildDashboardItem(
-                          title: 'News Feed',
-                          icon: Icons.feed,
-                          onTap: () {
-                            // Pass the necessary arguments to the NewsFeedScreen
-                            Navigator.pushNamed(
-                              context,
-                              '/news_feed',
-                              arguments: {
-                                'municipalityId': _userData?['mun1'] ??
-                                    '', // Ensure this is a String
-                                'languagePreference':
-                                    _userData?['language_preference'] ??
-                                        'English', // Ensure this is a String
-                              },
-                            );
-                          },
-                        ),
+_buildDashboardItem(
+  title: 'News Feed',
+  icon: Icons.feed,
+  onTap: () {
+    // Pass the necessary arguments to the NewsFeedScreen
+Navigator.pushNamed(
+  context,
+  '/news_feed',
+  arguments: {
+    'municipalityId': _userData?['mun1'] ?? '', // Ensure this is a String
+    'languagePreference': _userData?['language_preference'] ?? 'English', // Ensure this is a String
+  },
+);
+
+  },
+),
 
                         // _buildDashboardItem(
                         //   title: 'Chat',
