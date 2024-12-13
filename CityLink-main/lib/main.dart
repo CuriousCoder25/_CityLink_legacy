@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,4 +19,10 @@ class MainCityLinkApp extends StatelessWidget {
       initialRoute: '/splash',
       routes: {
         '/splash': (context) => const SplashScreen(),
-        '/main': (context) => const MainScreen(),
+      },
+    );  
+  }
+}
+class SplashScreen extends StatelessWidget {
+  const SplashScreen();
+}
