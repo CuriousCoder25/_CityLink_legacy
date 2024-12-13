@@ -2,6 +2,11 @@
 
 **City Link** is a mobile and web application that helps citizens report issues in their cities, such as broken streetlights, potholes, and other urban problems. It helps local governments solve problems faster and more efficiently.
 
+### Developed by:
+
+- Gaurav Kathayat - Developer, City Link (Team Lead)
+- Jeevan Joshi - Developer, City Link
+
 ## Features
 
 - Report problems with photos and videos.
