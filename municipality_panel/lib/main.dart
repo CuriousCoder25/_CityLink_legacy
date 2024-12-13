@@ -4,7 +4,7 @@ import 'package:municipality_panel/screens/dashboard_screen.dart';
 import 'firebase_options.dart';
 import 'screens/login_screen.dart';
 import 'screens/signup_screen.dart';
-import 'complaints_screen.dart'; // Import the ComplaintsScreen
+import 'screens/complaints_screen.dart'; // Import the ComplaintsScreen
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
