@@ -169,6 +169,9 @@ class _ComplaintBoxScreenState extends State<ComplaintBoxScreen> {
     isSubmitting = true;
   });
 
+  // Define the municipality ID where all complaints will go
+  final municipalityId = "single_municipality_id"; // Replace with your municipality ID
+
   List<Future<String?>> uploadFutures = [];
 
   if (selectedImage != null) {
@@ -187,8 +190,6 @@ class _ComplaintBoxScreenState extends State<ComplaintBoxScreen> {
     final videoUrl = results.length > 1 ? results[1] : null;
     final voiceUrl = results.length > 2 ? results[2] : null;
 
-    final municipalityId = "your_municipality_id"; // Replace with dynamic value if needed
-
     final complaint = {
       "user_id": user.uid,
       "complaint_type": selectedType,
@@ -203,10 +204,10 @@ class _ComplaintBoxScreenState extends State<ComplaintBoxScreen> {
       "updated_at": Timestamp.now(),
     };
 
-    // Store complaint under the relevant municipality
+    // Store complaint in the fixed municipality's Complaints collection
     await FirebaseFirestore.instance
         .collection('Municipalities')
-        .doc(municipalityId)
+        .doc(municipalityId) // Use the fixed municipality ID
         .collection('Complaints')
         .add(complaint);
 

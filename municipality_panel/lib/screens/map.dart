@@ -117,6 +117,7 @@ class _MapScreenState extends State<MapScreen> {
   /// Saves the mapped boundary to Firestore
  /// Saves the mapped boundary to Firestore and navigates to the dashboard
 /// Saves the mapped boundary to Firestore
+/// 
 Future<void> _saveMunicipalityBoundary() async {
   if (_polygonLatLngs.isEmpty) {
     _showSnackbar('Please map the boundary first.');
@@ -127,12 +128,15 @@ Future<void> _saveMunicipalityBoundary() async {
     _isSaving = true;
   });
 
+  // Convert polygon points to a storable format
   final boundaryData = _polygonLatLngs
       .map((latLng) => {'latitude': latLng.latitude, 'longitude': latLng.longitude})
       .toList();
 
   try {
-    await FirebaseFirestore.instance.collection('Municipalities').doc(widget.municipalityId).update({
+    // Save boundary to Firestore for the fixed municipality
+    const String fixedMunicipalityId = "1234567";
+    await FirebaseFirestore.instance.collection('Municipalities').doc(fixedMunicipalityId).update({
       'boundary': boundaryData,
     });
 

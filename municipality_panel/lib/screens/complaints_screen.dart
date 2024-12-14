@@ -15,20 +15,21 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
   bool _isLoading = true;
   bool _isRefreshing = false;  // Track if we're refreshing the list
 
-  @override
-  void initState() {
-    super.initState();
-    // Initialize complaints stream to listen to new complaints from Firestore
-    _complaintsStream = FirebaseFirestore.instance
-        .collection('Municipalities')
-        .doc(widget.municipalityId)
-        .collection('Complaints')
-        .orderBy('createdAt', descending: true)
-        .snapshots();
+@override
+void initState() {
+  super.initState();
 
-    // Set loading state to false after stream is ready
-    _isLoading = false;
-  }
+  // Initialize complaints stream for the fixed municipality ID
+  _complaintsStream = FirebaseFirestore.instance
+      .collection('Municipalities')
+      .doc(widget.municipalityId) // This will always be "single_municipality_id"
+      .collection('Complaints')
+      .orderBy('createdAt', descending: true)
+      .snapshots();
+
+  _isLoading = false;
+}
+
 
   // Updates the status of a complaint (mark it as resolved)
   Future<void> _updateComplaintStatus(String complaintId) async {

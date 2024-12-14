@@ -19,6 +19,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Define the municipality ID that will always receive complaints
+    const String fixedMunicipalityId = "1234567";
+
     return MaterialApp(
       title: 'Municipality Panel',
       theme: ThemeData(primarySwatch: Colors.blue),
@@ -26,9 +29,8 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const LoginScreen(),
         '/signup': (context) => const SignupScreen(),
-          '/dashboard': (context) => const DashboardScreen(),
-                  '/complaints': (context) => ComplaintsScreen(municipalityId: 'municipalityId123'),
-          
+        '/dashboard': (context) => const DashboardScreen(),
+'/complaints': (context) => ComplaintsScreen(municipalityId: fixedMunicipalityId),
 
       },
     );

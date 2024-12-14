@@ -36,42 +36,45 @@ class _SignupScreenState extends State<SignupScreen> {
     _confirmPasswordController.dispose();
     super.dispose();
   }
-
-  Future<void> _signup() async {
-    if (_passwordController.text != _confirmPasswordController.text) {
-      Fluttertoast.showToast(msg: 'Passwords do not match!');
-      return;
-    }
-
-    try {
-      final UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
-
-      // Save municipality details to Firestore
-      await _firestore.collection('Municipalities').doc(userCredential.user!.uid).set({
-        'name': _municipalityNameController.text.trim(),
-        'district': _districtController.text.trim(),
-        'zone': _zoneController.text.trim(),
-        'province': _provinceController.text.trim(),
-        'email': _emailController.text.trim(),
-        'phone_number': _phoneController.text.trim(),
-        'created_at': FieldValue.serverTimestamp(),
-      });
-
-      Fluttertoast.showToast(msg: 'Signup successful!');
-   Navigator.pushReplacement(
-  context,
-  MaterialPageRoute(
-    builder: (context) => MapScreen(municipalityId: userCredential.user!.uid),
-  ),
-);
-
-    } catch (e) {
-      Fluttertoast.showToast(msg: 'Signup failed: ${e.toString()}');
-    }
+Future<void> _signup() async {
+  if (_passwordController.text != _confirmPasswordController.text) {
+    Fluttertoast.showToast(msg: 'Passwords do not match!');
+    return;
   }
+
+  try {
+    final UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+    );
+
+    // Save municipality details to Firestore with a fixed municipality ID
+    const String fixedMunicipalityId = "1234567";
+
+    // Save user and municipality info to Firestore
+    await _firestore.collection('Municipalities').doc(fixedMunicipalityId).set({
+      'name': _municipalityNameController.text.trim(),
+      'district': _districtController.text.trim(),
+      'zone': _zoneController.text.trim(),
+      'province': _provinceController.text.trim(),
+      'email': _emailController.text.trim(),
+      'phone_number': _phoneController.text.trim(),
+      'created_at': FieldValue.serverTimestamp(),
+    });
+
+    // Navigate to the map screen with the fixed municipality ID
+    Fluttertoast.showToast(msg: 'Signup successful!');
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MapScreen(municipalityId: fixedMunicipalityId),
+      ),
+    );
+  } catch (e) {
+    Fluttertoast.showToast(msg: 'Signup failed: ${e.toString()}');
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
