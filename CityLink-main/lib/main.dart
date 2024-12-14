@@ -32,17 +32,18 @@ class MainCityLinkApp extends StatelessWidget {
       initialRoute: '/splash',
       routes: {
         '/splash': (context) => const SplashScreen(),
-        '/phone': (context) => const myPhone(),
+        '/phone': (context) => const MyPhone(),
         '/otp': (context) => const MyOtp(),
         '/dashboard': (context) => const DashboardScreen(),
-        '/user_detail': (context) => const UserDetailsScreen(),
+        '/user_detail': (context) => const UserDetailsScreen(municipalityId: fixedMunicipalityId,),
         '/complaint_box': (context) => ComplaintBoxScreen(municipalityId: fixedMunicipalityId),
         '/notifications': (context) => const NotificationsScreen(),
         '/profile': (context) => ProfileScreen(),
         '/history': (context) => ComplaintHistoryScreen(
-              userId: FirebaseAuth.instance.currentUser?.uid ?? "",
-            ),
+          userId: FirebaseAuth.instance.currentUser?.uid ?? "",
+        ),
       },
+
       onGenerateRoute: (settings) {
         if (settings.name == '/news_feed') {
           final args = settings.arguments as Map<String, dynamic>;
