@@ -207,7 +207,7 @@ class _ComplaintBoxScreenState extends State<ComplaintBoxScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Complaint Box'),
+        title: const Text('Complaint Box', style: TextStyle(color: Colors.white),),
         backgroundColor: Colors.green.shade700,
       ),
       body: Container(

@@ -146,61 +146,68 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: ListView(
-                  children: [
-                    Center(
-                      child: GestureDetector(
-                        onTap: _pickImage,
-                        child: CircleAvatar(
-                          radius: 50,
-                          backgroundImage: _selectedImage != null
-                              ? FileImage(_selectedImage!)
-                              : (_profilePictureUrl != null
-                                  ? NetworkImage(_profilePictureUrl!)
-                                  : const AssetImage('assets/default_profile.jpg')) as ImageProvider,
-                          child: const Icon(Icons.camera_alt, size: 30, color: Colors.white),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    if (_municipalityName != null)
-                      ListTile(
-                        leading: const Icon(Icons.location_city),
-                        title: Text("Municipality: $_municipalityName"),
-                      ),
-                    TextFormField(
-                      initialValue: _name,
-                      decoration: const InputDecoration(labelText: 'Name'),
-                      onSaved: (value) => _name = value,
-                      validator: (value) =>
-                          value == null || value.isEmpty ? "Name is required" : null,
-                    ),
-                    TextFormField(
-                      initialValue: _surname,
-                      decoration: const InputDecoration(labelText: 'Surname'),
-                      onSaved: (value) => _surname = value,
-                      validator: (value) =>
-                          value == null || value.isEmpty ? "Surname is required" : null,
-                    ),
-                    TextFormField(
-                      initialValue: _phoneNumber,
-                      decoration: const InputDecoration(labelText: 'Phone Number'),
-                      onSaved: (value) => _phoneNumber = value,
-                      validator: (value) =>
-                          value == null || value.isEmpty ? "Phone number is required" : null,
-                    ),
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: _updateProfile,
-                      child: const Text("Save Changes"),
-                    ),
-                  ],
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            children: [
+              Center(
+                child: GestureDetector(
+                  onTap: _pickImage,
+                  child: CircleAvatar(
+                    radius: 50,
+                    backgroundImage: _selectedImage != null
+                        ? FileImage(_selectedImage!)
+                        : (_profilePictureUrl != null
+                        ? NetworkImage(_profilePictureUrl!)
+                        : const AssetImage('assets/default_profile.jpg')) as ImageProvider,
+                    child: const Icon(Icons.camera_alt, size: 30, color: Colors.white),
+                  ),
                 ),
               ),
-            ),
+              const SizedBox(height: 20),
+              if (_municipalityName != null)
+                ListTile(
+                  leading: const Icon(Icons.location_city),
+                  title: Text("Municipality: $_municipalityName"),
+                ),
+              TextFormField(
+                initialValue: _name,
+                decoration: const InputDecoration(labelText: 'Name'),
+                onSaved: (value) => _name = value,
+                validator: (value) =>
+                value == null || value.isEmpty ? "Name is required" : null,
+              ),
+              TextFormField(
+                initialValue: _surname,
+                decoration: const InputDecoration(labelText: 'Surname'),
+                onSaved: (value) => _surname = value,
+                validator: (value) =>
+                value == null || value.isEmpty ? "Surname is required" : null,
+              ),
+              TextFormField(
+                initialValue: _phoneNumber,
+                decoration: const InputDecoration(labelText: 'Phone Number'),
+                onSaved: (value) => _phoneNumber = value,
+                validator: (value) =>
+                value == null || value.isEmpty ? "Phone number is required" : null,
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _updateProfile,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green, // Green background
+                  minimumSize: const Size(double.infinity, 50),
+                ),
+                child: const Text(
+                  "Save Changes",
+                  style: TextStyle(color: Colors.white), // White text
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

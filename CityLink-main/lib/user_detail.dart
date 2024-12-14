@@ -77,7 +77,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('User Details'),
+        title: const Text('User Details' ,style: TextStyle(color: Colors.white),),
         backgroundColor: Colors.green.shade700,
       ),
       body: Padding(
@@ -147,7 +147,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                   ),
                   child: const Text(
                     'Save Details',
-                    style: TextStyle(fontSize: 16),
+                    style: TextStyle(fontSize: 16,color: Colors.white),
                   ),
                 ),
               ],

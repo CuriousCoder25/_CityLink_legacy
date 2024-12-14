@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:video_player/video_player.dart';
 import 'package:audioplayers/audioplayers.dart';
 
@@ -33,66 +34,51 @@ class _ComplaintHistoryScreenState extends State<ComplaintHistoryScreen> {
         children: [
           _buildSearchBar(),
           Expanded(
-            child: StreamBuilder<QuerySnapshot>(
+            child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
               stream: FirebaseFirestore.instance
+                  .collection('Municipalities')
+                  .doc('1234567') // Fixed municipality ID
                   .collection('Complaints')
-                  .where('user_id', isEqualTo: widget.userId)
+                  .where('user_id', isEqualTo: widget.userId) // Filter by user ID
                   .orderBy('submitted_at', descending: true)
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
+                if (snapshot.hasError) {
+                  return Center(child: Text("Error: ${snapshot.error}"));
+                }
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                   return const Center(child: Text("No complaints found."));
                 }
 
                 var complaints = snapshot.data!.docs.where((doc) {
+                  final data = doc.data();
+                  if (data == null) return false;
+
                   final statusMatches =
-                      filterStatus == "All" || doc['status'] == filterStatus;
+                      filterStatus == "All" || data['status'] == filterStatus;
                   final searchMatches = searchQuery.isEmpty ||
-                      doc['complaint_type']
+                      (data['complaint_type'] ?? "")
                           .toLowerCase()
                           .contains(searchQuery.toLowerCase()) ||
-                      doc['message']
+                      (data['message'] ?? "")
                           .toLowerCase()
                           .contains(searchQuery.toLowerCase());
                   return statusMatches && searchMatches;
                 }).toList();
 
                 if (complaints.isEmpty) {
-                  return const Center(child: Text("No complaints match your filters."));
+                  return const Center(
+                      child: Text("No complaints match your filters."));
                 }
 
                 return ListView.builder(
                   itemCount: complaints.length,
                   itemBuilder: (context, index) {
                     final complaint = complaints[index];
-                    return Card(
-                      margin: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
-                      child: ListTile(
-                        leading: Icon(
-                          _getIconForComplaintType(complaint['complaint_type']),
-                          color: Colors.blue,
-                        ),
-                        title: Text(complaint['complaint_type']),
-                        subtitle: Text(
-                          "Status: ${complaint['status']}\nSubmitted: ${_formatRelativeTime(complaint['submitted_at'])}",
-                        ),
-                        isThreeLine: true,
-                        trailing: const Icon(Icons.arrow_forward),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ComplaintDetailScreen(
-                                complaintId: complaint.id,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    );
+                    return _buildComplaintCard(complaint);
                   },
                 );
               },
@@ -114,9 +100,133 @@ class _ComplaintHistoryScreenState extends State<ComplaintHistoryScreen> {
         ),
         onChanged: (value) {
           setState(() {
-            searchQuery = value;
+            searchQuery = value; // Update the search query
           });
         },
+      ),
+    );
+  }
+
+  Widget _buildComplaintCard(DocumentSnapshot<Map<String, dynamic>> complaint) {
+    final data = complaint.data();
+    if (data == null) return const SizedBox();
+
+    final photoUrl = data['photo_url'];
+    final videoUrl = data['video_url'];
+    final voiceUrl = data['voice_url'];
+    final location = data['location'];
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
+      child: ExpansionTile(
+        leading: Icon(
+          _getIconForComplaintType(data['complaint_type']),
+          color: Colors.blue,
+        ),
+        title: Text(data['complaint_type'] ?? 'Unknown'),
+        subtitle: Text(
+          "Status: ${data['status'] ?? 'Unknown'}\nSubmitted: ${_formatRelativeTime(data['submitted_at'])}",
+        ),
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Complaint Message
+                Text(
+                  "Message: ${data['message'] ?? 'No description'}",
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 10),
+
+                // Display photo if available
+                if (photoUrl != null && photoUrl.isNotEmpty)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Photo:",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 5),
+                      Image.network(
+                        photoUrl,
+                        height: 150,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    ],
+                  ),
+
+                // Display video if available
+                if (videoUrl != null && videoUrl.isNotEmpty)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 10),
+                      const Text(
+                        "Video:",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 5),
+                      VideoWidget(videoUrl: videoUrl),
+                    ],
+                  ),
+
+                // Display audio if available
+                if (voiceUrl != null && voiceUrl.isNotEmpty)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 10),
+                      const Text(
+                        "Audio:",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 5),
+                      AudioWidget(audioUrl: voiceUrl),
+                    ],
+                  ),
+
+                // Show location if available
+                if (location != null)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 10),
+                      const Text(
+                        "Location:",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 5),
+                      SizedBox(
+                        height: 150,
+                        child: GoogleMap(
+                          initialCameraPosition: CameraPosition(
+                            target: LatLng(
+                              location.latitude,
+                              location.longitude,
+                            ),
+                            zoom: 14.0,
+                          ),
+                          markers: {
+                            Marker(
+                              markerId: const MarkerId('complaintLocation'),
+                              position: LatLng(
+                                location.latitude,
+                                location.longitude,
+                              ),
+                            ),
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -155,11 +265,12 @@ class _ComplaintHistoryScreenState extends State<ComplaintHistoryScreen> {
     );
   }
 
-  String _formatRelativeTime(Timestamp timestamp) {
+  String _formatRelativeTime(Timestamp? timestamp) {
+    if (timestamp == null) return "Unknown";
     return timeago.format(timestamp.toDate());
   }
 
-  IconData _getIconForComplaintType(String type) {
+  IconData _getIconForComplaintType(String? type) {
     switch (type) {
       case "Hospital":
         return Icons.local_hospital;
@@ -175,103 +286,16 @@ class _ComplaintHistoryScreenState extends State<ComplaintHistoryScreen> {
   }
 }
 
-class ComplaintDetailScreen extends StatelessWidget {
-  final String complaintId;
-
-  const ComplaintDetailScreen({super.key, required this.complaintId});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Complaint Details"),
-      ),
-      body: FutureBuilder<DocumentSnapshot>(
-        future: FirebaseFirestore.instance.collection('Complaints').doc(complaintId).get(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (!snapshot.hasData || !snapshot.data!.exists) {
-            return const Center(child: Text("Complaint details not found."));
-          }
-
-          final complaint = snapshot.data!;
-          return Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: ListView(
-              children: [
-                ListTile(
-                  title: const Text("Complaint Type"),
-                  subtitle: Text(complaint['complaint_type']),
-                ),
-                ListTile(
-                  title: const Text("Message"),
-                  subtitle: Text(complaint['message']),
-                ),
-                if (complaint['photo_url'] != null)
-                  Image.network(complaint['photo_url']),
-                if (complaint['video_url'] != null)
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => VideoPlayerScreen(videoUrl: complaint['video_url']),
-                        ),
-                      );
-                    },
-                    child: const Text("View Video"),
-                  ),
-                if (complaint['voice_url'] != null)
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AudioPlayerScreen(audioUrl: complaint['voice_url']),
-                        ),
-                      );
-                    },
-                    child: const Text("Play Audio"),
-                  ),
-                ListTile(
-                  title: const Text("Location"),
-                  subtitle: Text(
-                    "Lat: ${complaint['location'].latitude}, Lng: ${complaint['location'].longitude}",
-                  ),
-                ),
-                ListTile(
-                  title: const Text("Status"),
-                  subtitle: Text(complaint['status']),
-                ),
-                ListTile(
-                  title: const Text("Submitted At"),
-                  subtitle: Text(_formatRelativeTime(complaint['submitted_at'])),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  String _formatRelativeTime(Timestamp timestamp) {
-    return timeago.format(timestamp.toDate());
-  }
-}
-
-class VideoPlayerScreen extends StatefulWidget {
+class VideoWidget extends StatefulWidget {
   final String videoUrl;
 
-  const VideoPlayerScreen({super.key, required this.videoUrl});
+  const VideoWidget({super.key, required this.videoUrl});
 
   @override
-  _VideoPlayerScreenState createState() => _VideoPlayerScreenState();
+  State<VideoWidget> createState() => _VideoWidgetState();
 }
 
-class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
+class _VideoWidgetState extends State<VideoWidget> {
   late VideoPlayerController _controller;
 
   @override
@@ -284,85 +308,46 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   }
 
   @override
+  Widget build(BuildContext context) {
+    return _controller.value.isInitialized
+        ? AspectRatio(
+      aspectRatio: _controller.value.aspectRatio,
+      child: VideoPlayer(_controller),
+    )
+        : const CircularProgressIndicator();
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Video Player")),
-      body: Center(
-        child: _controller.value.isInitialized
-            ? AspectRatio(
-          aspectRatio: _controller.value.aspectRatio,
-          child: VideoPlayer(_controller),
-        )
-            : const CircularProgressIndicator(),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          setState(() {
-            _controller.value.isPlaying ? _controller.pause() : _controller.play();
-          });
-        },
-        child: Icon(
-          _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
-        ),
-      ),
-    );
-  }
 }
 
-class AudioPlayerScreen extends StatefulWidget {
+class AudioWidget extends StatelessWidget {
   final String audioUrl;
 
-  const AudioPlayerScreen({super.key, required this.audioUrl});
-
-  @override
-  _AudioPlayerScreenState createState() => _AudioPlayerScreenState();
-}
-
-class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
-  final AudioPlayer _audioPlayer = AudioPlayer();
-  bool isPlaying = false;
-
-  @override
-  void dispose() {
-    _audioPlayer.dispose();
-    super.dispose();
-  }
+  const AudioWidget({super.key, required this.audioUrl});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Audio Player")),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              isPlaying ? Icons.pause_circle : Icons.play_circle,
-              size: 100,
-              color: Colors.blue,
-            ),
-            TextButton(
-              onPressed: () async {
-                if (isPlaying) {
-                  await _audioPlayer.pause();
-                } else {
-                  await _audioPlayer.play(UrlSource(widget.audioUrl));
-                }
-                setState(() {
-                  isPlaying = !isPlaying;
-                });
-              },
-              child: Text(isPlaying ? "Pause Audio" : "Play Audio"),
-            ),
-          ],
+    final audioPlayer = AudioPlayer();
+
+    return Row(
+      children: [
+        IconButton(
+          icon: const Icon(Icons.play_arrow),
+          onPressed: () async {
+            await audioPlayer.play(UrlSource(audioUrl));
+          },
         ),
-      ),
+        IconButton(
+          icon: const Icon(Icons.stop),
+          onPressed: () async {
+            await audioPlayer.stop();
+          },
+        ),
+      ],
     );
   }
 }
