@@ -1,10 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:flutter_sound/flutter_sound.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'dart:io';
+import 'package:cloudinary/cloudinary.dart';
+
+// Cloudinary Initialization
+const String cloudName = "dtlmvwa2q";
+const String uploadPreset = "unsigned-preset";
+final cloudinary = Cloudinary.unsignedConfig(cloudName: cloudName);
 
 class ComplaintBoxScreen extends StatefulWidget {
-  final String municipalityId;
+  final String municipalityId; // Pass the municipality ID dynamically
 
   const ComplaintBoxScreen({super.key, required this.municipalityId});
 
@@ -13,97 +24,255 @@ class ComplaintBoxScreen extends StatefulWidget {
 }
 
 class _ComplaintBoxScreenState extends State<ComplaintBoxScreen> {
-  final TextEditingController _messageController = TextEditingController();
-  bool _isSubmitting = false;
-  Position? _userLocation;
+  String selectedType = "Hospital"; // Default complaint type
+  final TextEditingController messageController = TextEditingController();
+  File? selectedImage;
+  File? selectedVideo;
+  File? selectedVoice;
+  GeoPoint? userLocation;
+  bool isRecording = false;
+  bool isSubmitting = false;
+  bool isAnonymous = false; // Anonymous toggle
+  late FlutterSoundRecorder _recorder;
 
   @override
   void initState() {
     super.initState();
     _fetchLocation();
+    _initializeRecorder();
   }
 
   Future<void> _fetchLocation() async {
     try {
       LocationPermission permission = await Geolocator.requestPermission();
-      if (permission != LocationPermission.denied && permission != LocationPermission.deniedForever) {
+      if (permission != LocationPermission.denied &&
+          permission != LocationPermission.deniedForever) {
         Position position = await Geolocator.getCurrentPosition();
-        setState(() => _userLocation = position);
+        setState(() {
+          userLocation = GeoPoint(position.latitude, position.longitude);
+        });
       }
     } catch (e) {
-      print('Error fetching location: $e');
+      print("Error fetching location: $e");
     }
   }
 
-  Future<void> _submitComplaint() async {
-    if (_messageController.text.trim().isEmpty) {
+  Future<void> _initializeRecorder() async {
+    _recorder = FlutterSoundRecorder();
+    await _recorder.openRecorder();
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    final pickedImage = await ImagePicker().pickImage(source: source);
+    if (pickedImage != null) {
+      setState(() {
+        selectedImage = File(pickedImage.path);
+      });
+    }
+  }
+
+  Future<void> _pickVideo(ImageSource source) async {
+    final pickedVideo = await ImagePicker().pickVideo(source: source);
+    if (pickedVideo != null) {
+      setState(() {
+        selectedVideo = File(pickedVideo.path);
+      });
+    }
+  }
+
+  Future<void> _startRecording() async {
+    Directory tempDir = await getTemporaryDirectory();
+    String path = "${tempDir.path}/voice_note.aac";
+    var status = await Permission.microphone.request();
+    if (status.isGranted) {
+      try {
+        setState(() {
+          isRecording = true;
+        });
+        await _recorder.startRecorder(toFile: path);
+      } catch (e) {
+        print("Error starting recorder: $e");
+      }
+    }
+  }
+
+  Future<void> _stopRecording() async {
+    try {
+      String? path = await _recorder.stopRecorder();
+      setState(() {
+        isRecording = false;
+        selectedVoice = File(path!);
+      });
+    } catch (e) {
+      print("Error stopping recorder: $e");
+    }
+  }
+
+  Future<String?> _uploadToCloudinary(File file, String resourceType) async {
+    try {
+      final response = await cloudinary.unsignedUpload(
+        file: file.path,
+        uploadPreset: uploadPreset,
+        resourceType: CloudinaryResourceType.values.byName(resourceType),
+      );
+
+      if (response.isSuccessful && response.secureUrl != null) {
+        return response.secureUrl;
+      } else {
+        print("Error uploading to Cloudinary: ${response.error}");
+        return null;
+      }
+    } catch (e) {
+      print("Error uploading file: $e");
+      return null;
+    }
+  }
+
+  Future<void> submitComplaint() async {
+    if (messageController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a complaint message.')),
+        const SnackBar(content: Text("Message field cannot be empty")),
       );
       return;
     }
 
-    setState(() => _isSubmitting = true);
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null && !isAnonymous) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("User not logged in")),
+      );
+      return;
+    }
+
+    setState(() => isSubmitting = true);
+
+    List<Future<String?>> uploadFutures = [];
+    if (selectedImage != null) {
+      uploadFutures.add(_uploadToCloudinary(selectedImage!, "image"));
+    }
+    if (selectedVideo != null) {
+      uploadFutures.add(_uploadToCloudinary(selectedVideo!, "video"));
+    }
+    if (selectedVoice != null) {
+      uploadFutures.add(_uploadToCloudinary(selectedVoice!, "raw"));
+    }
 
     try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
-        throw Exception('User not logged in.');
-      }
+      final results = await Future.wait(uploadFutures);
+      final photoUrl = results.isNotEmpty ? results[0] : null;
+      final videoUrl = results.length > 1 ? results[1] : null;
+      final voiceUrl = results.length > 2 ? results[2] : null;
 
       final complaint = {
-        'user_id': user.uid,
-        'message': _messageController.text.trim(),
-        'location': _userLocation != null
-            ? GeoPoint(_userLocation!.latitude, _userLocation!.longitude)
-            : null,
-        'status': 'Pending',
-        'submitted_at': Timestamp.now(),
+        "user_id": isAnonymous ? null : user?.uid,
+        "anonymous": isAnonymous,
+        "complaint_type": selectedType,
+        "message": messageController.text.trim(),
+        "photo_url": photoUrl,
+        "video_url": videoUrl,
+        "voice_url": voiceUrl,
+        "location": userLocation ?? GeoPoint(0, 0),
+        "status": "Pending",
+        "submitted_at": Timestamp.now(),
+        "updated_at": Timestamp.now(),
       };
 
       await FirebaseFirestore.instance
           .collection('Municipalities')
-          .doc(widget.municipalityId) // Use the fixed municipality ID
-          .collection('Complaints')
+          .doc(widget.municipalityId) // Use the passed municipality ID
+          .collection('Complaints') // Complaints subcollection
           .add(complaint);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Complaint submitted successfully!')),
+        const SnackBar(content: Text("Complaint Submitted Successfully")),
       );
       Navigator.pop(context);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error submitting complaint: $e')),
+        SnackBar(content: Text("Error submitting complaint: $e")),
       );
     } finally {
-      setState(() => _isSubmitting = false);
+      setState(() => isSubmitting = false);
     }
+  }
+
+  @override
+  void dispose() {
+    _recorder.closeRecorder();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Complaint Box')),
-      body: Padding(
+      appBar: AppBar(
+        title: const Text('Complaint Box'),
+        backgroundColor: Colors.green.shade700,
+      ),
+      body: Container(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _messageController,
-              decoration: const InputDecoration(
-                labelText: 'Your Complaint',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
-            const SizedBox(height: 20),
-            _isSubmitting
-                ? const CircularProgressIndicator()
-                : ElevatedButton(
-                    onPressed: _submitComplaint,
-                    child: const Text('Submit Complaint'),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Text('Anonymous Submission'),
+                  Switch(
+                    value: isAnonymous,
+                    onChanged: (value) {
+                      setState(() {
+                        isAnonymous = value;
+                      });
+                    },
                   ),
-          ],
+                ],
+              ),
+              DropdownButtonFormField<String>(
+                value: selectedType,
+                items: ["Hospital", "Fire Department", "Police", "Public Complaint"]
+                    .map((type) => DropdownMenuItem(value: type, child: Text(type)))
+                    .toList(),
+                onChanged: (value) => setState(() => selectedType = value!),
+                decoration: const InputDecoration(
+                  labelText: "Complaint Type",
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: messageController,
+                decoration: const InputDecoration(
+                  labelText: "Message",
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
+                onPressed: () => _pickImage(ImageSource.camera),
+                icon: const Icon(Icons.camera),
+                label: const Text("Camera"),
+              ),
+              if (selectedImage != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: Image.file(selectedImage!, height: 150, width: 150, fit: BoxFit.cover),
+                ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: submitComplaint,
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  backgroundColor: Colors.green.shade700,
+                ),
+                child: const Text(
+                  "Submit Complaint",
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
