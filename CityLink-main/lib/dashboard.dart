@@ -8,6 +8,7 @@ class DashboardScreen extends StatefulWidget {
   @override
   _DashboardScreenState createState() => _DashboardScreenState();
 }
+
 class _DashboardScreenState extends State<DashboardScreen> {
   String? _userId;
   Map<String, dynamic>? _userData;
@@ -31,9 +32,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _userId = user.uid;
 
       DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('Municipalities')
+          .doc('1234567')
           .collection('Users')
-          .doc(_userId)
+          .doc(_userId) // Fetch by UID
           .get();
+
+
 
       if (userDoc.exists) {
         setState(() {
@@ -63,7 +68,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
       );
     }
 
@@ -71,68 +78,52 @@ class _DashboardScreenState extends State<DashboardScreen> {
       appBar: AppBar(
         title: const Text('Dashboard'),
         automaticallyImplyLeading: false,
+        backgroundColor: Colors.green.shade700,
       ),
       body: _userData == null
           ? Center(
               child: ElevatedButton(
                 onPressed: _fetchUserData,
-                child: const Text('Retry'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green.shade700,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+                child: const Text('Retry', style: TextStyle(fontSize: 16)),
               ),
             )
-          : Padding(
+          : Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.green.shade50, Colors.green.shade100],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
               padding: const EdgeInsets.all(16.0),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
                     'Welcome to your Dashboard!',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
                   ),
                   const SizedBox(height: 20),
                   Expanded(
-                    child: GridView.count(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      children: [
-                        _buildDashboardItem(
-                          title: 'Complaint Box',
-                          icon: Icons.report_problem,
-                          onTap: () {
-                            Navigator.pushNamed(context, '/complaint_box');
-                          },
-                        ),
-                        _buildDashboardItem(
-                          title: 'Notifications',
-                          icon: Icons.notifications,
-                          onTap: () {
-                            Navigator.pushNamed(context, '/notifications');
-                          },
-                        ),
-                        _buildDashboardItem(
-                          title: 'Profile',
-                          icon: Icons.person,
-                          onTap: () {
-                            Navigator.pushNamed(context, '/profile', arguments: _userData);
-                          },
-                        ),
-                        _buildDashboardItem(
-                          title: 'News Feed',
-                          icon: Icons.feed,
-                          onTap: () {
-                            Navigator.pushNamed(context, '/news_feed', arguments: {
-                              'municipalityId': "single_municipality_id", // Fixed ID
-                              'languagePreference': _userData?['language_preference'] ?? 'English',
-                            });
-                          },
-                        ),
-                        _buildDashboardItem(
-                          title: 'History',
-                          icon: Icons.history,
-                          onTap: () {
-                            Navigator.pushNamed(context, '/history');
-                          },
-                        ),
-                      ],
+                    child: GridView.builder(
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                      ),
+                      itemCount: 5,
+                      itemBuilder: (context, index) {
+                        return _buildDashboardItem(index);
+                      },
                     ),
                   ),
                 ],
@@ -141,26 +132,52 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildDashboardItem({
-    required String title,
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildDashboardItem(int index) {
+    final items = [
+      {'title': 'Complaint Box', 'icon': Icons.report_problem, 'route': '/complaint_box'},
+      {'title': 'Notifications', 'icon': Icons.notifications, 'route': '/notifications'},
+      {'title': 'Profile', 'icon': Icons.person, 'route': '/profile'},
+      {'title': 'News Feed', 'icon': Icons.feed, 'route': '/news_feed'},
+      {'title': 'History', 'icon': Icons.history, 'route': '/history'},
+    ];
+
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        Navigator.pushNamed(context, items[index]['route'] as String, arguments: _userData);
+      },
       child: Card(
-        elevation: 4,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 40, color: Colors.blue),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        elevation: 6,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shadowColor: Colors.grey.shade300,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: LinearGradient(
+              colors: [Colors.green.shade200, Colors.green.shade300],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-          ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                items[index]['icon'] as IconData,
+                size: 40,
+                color: Colors.white,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                items[index]['title'] as String,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
