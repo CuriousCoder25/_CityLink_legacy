@@ -1,16 +1,57 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:municipality_panel/screens/complaints_screen.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    const String fixedMunicipalityId = "1234567"; // Use the fixed municipality ID
+  _DashboardScreenState createState() => _DashboardScreenState();
+}
 
+class _DashboardScreenState extends State<DashboardScreen> {
+  final String fixedMunicipalityId = "1234567"; // Fixed municipality ID
+  String municipalityName = "Loading..."; // Default loading state for municipality name
+  String provinceName = "Loading..."; // Default loading state for province name
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchMunicipalityData(); // Fetch the name and province on initialization
+  }
+
+  Future<void> _fetchMunicipalityData() async {
+    try {
+      final docSnapshot = await FirebaseFirestore.instance
+          .collection('Municipalities')
+          .doc(fixedMunicipalityId)
+          .get();
+
+      if (docSnapshot.exists) {
+        setState(() {
+          municipalityName = docSnapshot.data()?['name'] ?? "Unknown Municipality";
+          provinceName = docSnapshot.data()?['province'] ?? "Unknown Province";
+        });
+      } else {
+        setState(() {
+          municipalityName = "Municipality Not Found";
+          provinceName = "Province Not Found";
+        });
+      }
+    } catch (e) {
+      setState(() {
+        municipalityName = "Error Loading Municipality";
+        provinceName = "Error Loading Province";
+      });
+      debugPrint("Error fetching municipality data: $e");
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Dhangadi Muncipality'),
+        title: Text(municipalityName), // Display the fetched municipality name
         backgroundColor: Colors.blue.shade700,
         actions: [
           IconButton(
@@ -40,14 +81,14 @@ class DashboardScreen extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
+                    children: [
                       Text(
-                        'Sample Name',
-                        style: TextStyle(color: Colors.white, fontSize: 16),
+                        municipalityName, // Fetch and display municipality name
+                        style: const TextStyle(color: Colors.white, fontSize: 16),
                       ),
                       Text(
-                        'User',
-                        style: TextStyle(color: Colors.white70, fontSize: 14),
+                        provinceName, // Fetch and display province name
+                        style: const TextStyle(color: Colors.white70, fontSize: 14),
                       ),
                     ],
                   ),
@@ -61,20 +102,7 @@ class DashboardScreen extends StatelessWidget {
                 // Stay on dashboard
               },
             ),
-            ListTile(
-              leading: const Icon(Icons.report),
-              title: const Text('Complaint'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ComplaintsScreen(
-                      municipalityId: fixedMunicipalityId,
-                    ),
-                  ),
-                );
-              },
-            ),
+            // Removed the Complaints ListTile here
             ListTile(
               leading: const Icon(Icons.people),
               title: const Text('User Management'),
@@ -98,7 +126,7 @@ class DashboardScreen extends StatelessWidget {
           const Padding(
             padding: EdgeInsets.all(16.0),
             child: Text(
-              'Admin Dashboard',
+              'Municipality Dashboard',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
           ),
@@ -110,7 +138,7 @@ class DashboardScreen extends StatelessWidget {
               mainAxisSpacing: 16,
               children: [
                 _buildDashboardCard(
-                  title: '150',
+                  title: '5',
                   subtitle: 'Total Complaints',
                   color: Colors.blue,
                   icon: Icons.chat,
@@ -181,7 +209,16 @@ class DashboardScreen extends StatelessWidget {
             const SizedBox(height: 8),
             TextButton(
               onPressed: () {
-                // Handle "More Info"
+                if (subtitle == 'Total Complaints') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ComplaintsScreen(
+                        municipalityId: fixedMunicipalityId,
+                      ),
+                    ),
+                  );
+                }
               },
               child: const Text(
                 'More Info',
