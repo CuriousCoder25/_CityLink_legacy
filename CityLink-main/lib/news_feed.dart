@@ -11,20 +11,20 @@ class NewsFeedScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("News Feed"),
+        title: const Text("News Feed"),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('NewsFeed')
-            .where('municipality_id', isEqualTo: municipalityId)
+            .where('municipality_id', isEqualTo: "1234567") // Fixed municipality ID
             .orderBy('created_at', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return Center(child: Text("No news updates available."));
+            return const Center(child: Text("No news updates available."));
           }
 
           final newsList = snapshot.data!.docs;
@@ -33,17 +33,24 @@ class NewsFeedScreen extends StatelessWidget {
             itemCount: newsList.length,
             itemBuilder: (context, index) {
               final news = newsList[index];
+              final title = languagePreference == "Nepali"
+                  ? news['title_nepali'] ?? news['title']
+                  : news['title'];
+              final content = languagePreference == "Nepali"
+                  ? news['content_nepali'] ?? news['content']
+                  : news['content'];
+
               return Card(
-                margin: EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
+                margin: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
                 child: ListTile(
                   title: Text(
-                    news['title'],
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    title,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  subtitle: Text(news['content']),
+                  subtitle: Text(content),
                   trailing: Text(
                     _formatTimestamp(news['created_at']),
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ),
               );

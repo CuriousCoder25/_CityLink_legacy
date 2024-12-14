@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 // Import your app screens
 import 'package:maincitylink/phone_login.dart';
 import 'package:maincitylink/otp.dart';
+
 import 'package:maincitylink/profile_screen.dart';
 import 'package:maincitylink/user_detail.dart';
 import 'package:maincitylink/dashboard.dart';
@@ -11,7 +12,7 @@ import 'package:maincitylink/complain.dart';
 
 import 'news_feed.dart';
 import 'notifications.dart';
-import 'history.dart'; // Import ComplaintHistoryScreen
+import 'history.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,46 +25,42 @@ class MainCityLinkApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const String fixedMunicipalityId = "1234567"; // Fixed ID for complaints
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       initialRoute: '/splash',
       routes: {
-
         '/splash': (context) => const SplashScreen(),
         '/phone': (context) => const myPhone(),
         '/otp': (context) => const MyOtp(),
         '/dashboard': (context) => const DashboardScreen(),
         '/user_detail': (context) => const UserDetailsScreen(),
-        '/complaint_box': (context) => const ComplaintBoxScreen(),
+        '/complaint_box': (context) => ComplaintBoxScreen(municipalityId: fixedMunicipalityId),
         '/notifications': (context) => const NotificationsScreen(),
         '/profile': (context) => ProfileScreen(),
         '/history': (context) => ComplaintHistoryScreen(
               userId: FirebaseAuth.instance.currentUser?.uid ?? "",
-            ), // Pass userId
+            ),
       },
-onGenerateRoute: (settings) {
-  if (settings.name == '/news_feed') {
-    // Safely extract arguments as a Map<String, dynamic>
-    final args = settings.arguments as Map<String, dynamic>;
-    
-    // Ensure the arguments are safe before using them
-    final municipalityId = args['municipalityId'] as String? ?? ''; // Provide a fallback value if needed
-    final languagePreference = args['languagePreference'] as String? ?? 'English'; // Default to 'English'
+      onGenerateRoute: (settings) {
+        if (settings.name == '/news_feed') {
+          final args = settings.arguments as Map<String, dynamic>;
+          final municipalityId = args['municipalityId'] as String? ?? fixedMunicipalityId; // Use fixed ID
+          final languagePreference = args['languagePreference'] as String? ?? 'English';
 
-    return MaterialPageRoute(
-      builder: (context) => NewsFeedScreen(
-        municipalityId: municipalityId,
-        languagePreference: languagePreference,
-      ),
-    );
-  }
-  return null;
-},
-
+          return MaterialPageRoute(
+            builder: (context) => NewsFeedScreen(
+              municipalityId: municipalityId,
+              languagePreference: languagePreference,
+            ),
+          );
+        }
+        return null;
+      },
     );
   }
 }
-
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
 
