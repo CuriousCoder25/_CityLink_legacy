@@ -44,38 +44,35 @@ class _MyOtpState extends State<MyOtp> {
     }
   }
 
-  Future<void> _navigateBasedOnUser(User user, String phoneNumber) async {
-    if (await _checkUserExists(user.uid)) {
-      Navigator.pushReplacementNamed(context, '/dashboard');
-    } else {
-      Position? userPosition = await _getUserLocation();
-      print('User Position: $userPosition');
-      String? detectedMunicipality;
+Future<void> _navigateBasedOnUser(User user, String phoneNumber) async {
+  const String fixedMunicipalityId = "1234567";
 
-      if (userPosition != null) {
-        detectedMunicipality = await _findMunicipality(userPosition.latitude, userPosition.longitude);
-        print('Detected Municipality: $detectedMunicipality');
-      }
+  if (await _checkUserExists(user.uid)) {
+    Navigator.pushReplacementNamed(context, '/dashboard');
+  } else {
+    Position? userPosition = await _getUserLocation();
+    await FirebaseFirestore.instance.collection('Users').doc(user.uid).set({
+      'phone_number': phoneNumber,
+      'municipality_id': fixedMunicipalityId, // Link the user to the fixed municipality
+      'location': userPosition != null
+          ? GeoPoint(userPosition.latitude, userPosition.longitude)
+          : null,
+      'created_at': Timestamp.now(),
+    });
 
-      setState(() {
-        _isVerifying = false;
-        _isSuccess = true;
-      });
+    setState(() {
+      _isVerifying = false;
+      _isSuccess = true;
+    });
 
-      await Future.delayed(const Duration(seconds: 2));
-
-      // Pass the detected municipality name to user_detail.dart
-      Navigator.pushReplacementNamed(
-        context,
-        '/user_detail',
-        arguments: {
-          'userId': user.uid,
-          'phoneNumber': phoneNumber,
-          'detectedMunicipality': detectedMunicipality,
-        },
-      );
-    }
+    await Future.delayed(const Duration(seconds: 2));
+    Navigator.pushReplacementNamed(context, '/user_detail', arguments: {
+      'userId': user.uid,
+      'phoneNumber': phoneNumber,
+      'detectedMunicipality': fixedMunicipalityId,
+    });
   }
+}
 
   Future<bool> _checkUserExists(String userId) async {
     try {
