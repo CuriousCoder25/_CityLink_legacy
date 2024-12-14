@@ -11,25 +11,27 @@ class ComplaintsScreen extends StatefulWidget {
 }
 
 class _ComplaintsScreenState extends State<ComplaintsScreen> {
-  late Stream<QuerySnapshot> _complaintsStream;
-  bool _isLoading = true;
-  bool _isRefreshing = false;  // Track if we're refreshing the list
+  late Stream<QuerySnapshot<Map<String, dynamic>>> _complaintsStream;
+  bool _isRefreshing = false;
 
-@override
-void initState() {
-  super.initState();
+  @override
+  void initState() {
+    super.initState();
 
-  // Initialize complaints stream for the fixed municipality ID
-  _complaintsStream = FirebaseFirestore.instance
-      .collection('Municipalities')
-      .doc(widget.municipalityId) // This will always be "single_municipality_id"
-      .collection('Complaints')
-      .orderBy('createdAt', descending: true)
-      .snapshots();
+    // Initialize complaints stream for the given municipality ID
+_complaintsStream = FirebaseFirestore.instance
+    .collection('Municipalities')
+    .doc(widget.municipalityId) // Ensure this is correct
+    .collection('Complaints')
+    // .orderBy('createdAt', descending: true)
+    .snapshots();
+      print("Listening to complaints stream for municipalityId: ${widget.municipalityId}");
 
-  _isLoading = false;
-}
+_complaintsStream.listen((snapshot) {
+  print("Complaints Stream Data: ${snapshot.docs.map((doc) => doc.data())}");
+});
 
+  }
 
   // Updates the status of a complaint (mark it as resolved)
   Future<void> _updateComplaintStatus(String complaintId) async {
@@ -39,9 +41,7 @@ void initState() {
           .doc(widget.municipalityId)
           .collection('Complaints')
           .doc(complaintId)
-          .update({
-        'status': 'resolved',
-      });
+          .update({'status': 'resolved'});
 
       _showSnackbar('Complaint marked as resolved!');
     } catch (e) {
@@ -70,33 +70,36 @@ void initState() {
   }
 
   // Displays individual complaint details in a card
-  Widget _buildComplaintCard(DocumentSnapshot complaint) {
-    final complaintData = complaint.data() as Map<String, dynamic>;
+  Widget _buildComplaintCard(DocumentSnapshot<Map<String, dynamic>> complaint) {
+    final complaintData = complaint.data();
     final complaintId = complaint.id;
-    final description = complaintData['message'] ?? '';
-    final status = complaintData['status'] ?? 'open';
-    final createdAt = (complaintData['createdAt'] as Timestamp).toDate();
+    final description = complaintData?['message'] ?? 'No description provided';
+    final status = complaintData?['status'] ?? 'Open';
+    final createdAt = (complaintData?['createdAt'] as Timestamp?)?.toDate();
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
       child: ListTile(
-        title: Text('Complaint #$complaintId'),
+        title: Text('Complaint ID: $complaintId'),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Description: $description'),
             const SizedBox(height: 5),
             Text('Status: $status'),
-            const SizedBox(height: 5),
-            Text('Reported on: ${createdAt.toLocal()}'),
+            if (createdAt != null)
+              Text(
+                'Reported on: ${createdAt.toLocal()}',
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
           ],
         ),
-        trailing: status != 'resolved'
+        trailing: status.toLowerCase() != 'resolved'
             ? IconButton(
                 icon: const Icon(Icons.check_circle, color: Colors.green),
                 onPressed: () => _updateComplaintStatus(complaintId),
               )
-            : null,
+            : const Icon(Icons.check_circle, color: Colors.grey),
       ),
     );
   }
@@ -121,33 +124,43 @@ void initState() {
             ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : StreamBuilder<QuerySnapshot>(
-              stream: _complaintsStream,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        
+        stream: _complaintsStream,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                }
+          if (snapshot.hasError) {
+            return Center(
+              child: Text('Error: ${snapshot.error}'),
+            );
+          }
 
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return const Center(child: Text('No complaints found.'));
-                }
 
-                final complaints = snapshot.data!.docs;
 
-                return ListView.builder(
-                  itemCount: complaints.length,
-                  itemBuilder: (context, index) {
-                    return _buildComplaintCard(complaints[index]);
-                  },
-                );
-              },
-            ),
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return const Center(
+              child: Text('No complaints found.'),
+            );
+          }
+          
+
+          final complaints = snapshot.data!.docs;
+          print('Complaints:');
+          for (var complaint in complaints) {
+            print(complaint.data());
+          }
+
+          return ListView.builder(
+            itemCount: complaints.length,
+            itemBuilder: (context, index) {
+              return _buildComplaintCard(complaints[index]);
+            },
+          );
+        },
+      ),
     );
   }
 }

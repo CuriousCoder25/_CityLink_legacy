@@ -53,42 +53,42 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
 
     return querySnapshot.docs.isEmpty;
   }
+Future<void> _saveDetails() async {
+  if (_formKey.currentState!.validate()) {
+    _formKey.currentState!.save();
 
-  Future<void> _saveDetails() async {
-    if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
+    setState(() {
+      _isCheckingCitizenship = true;
+    });
 
-      setState(() {
-        _isCheckingCitizenship = true;
-      });
+    // Check for unique citizenship number
+    bool isUnique = await _isCitizenshipNumberUnique(_citizenshipNumber!);
 
-      // Check for unique citizenship number
-      bool isUnique = await _isCitizenshipNumberUnique(_citizenshipNumber!);
+    setState(() {
+      _isCheckingCitizenship = false;
+    });
 
-      setState(() {
-        _isCheckingCitizenship = false;
-      });
-
-      if (!isUnique) {
-        // Show error if the citizenship number already exists
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Citizenship number is already in use.')),
-        );
-        return;
-      }
-
-      // Save the user details if the citizenship number is unique
-      await FirebaseFirestore.instance.collection('Users').doc(_userId).set({
-        'name': _firstName,
-        'surname': _lastName,
-        'citizenship_number': _citizenshipNumber,
-        'email': _email,
-        'phone_number': _phoneNumber, // Save the phone number
-      });
-
-      Navigator.pushReplacementNamed(context, '/dashboard');
+    if (!isUnique) {
+      // Show error if the citizenship number already exists
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Citizenship number is already in use.')),
+      );
+      return;
     }
+
+    // Save the user details if the citizenship number is unique
+    await FirebaseFirestore.instance.collection('Users').doc(_userId).set({
+      'name': _firstName,
+      'surname': _lastName,
+      'citizenship_number': _citizenshipNumber,
+      'email': _email,
+      'phone_number': _phoneNumber, // Save the phone number
+      'municipality_id': '1234567', // Fixed municipality ID
+    });
+
+    Navigator.pushReplacementNamed(context, '/dashboard');
   }
+}
 
   @override
   Widget build(BuildContext context) {
