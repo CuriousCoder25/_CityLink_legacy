@@ -15,7 +15,7 @@ const String uploadPreset = "unsigned-preset";
 final cloudinary = Cloudinary.unsignedConfig(cloudName: cloudName);
 
 class ComplaintBoxScreen extends StatefulWidget {
-  final String municipalityId; // Pass the municipality ID dynamically
+  final String municipalityId;
 
   const ComplaintBoxScreen({super.key, required this.municipalityId});
 
@@ -28,11 +28,11 @@ class _ComplaintBoxScreenState extends State<ComplaintBoxScreen> {
   final TextEditingController messageController = TextEditingController();
   File? selectedImage;
   File? selectedVideo;
-  File? selectedVoice;
+  String? recordedAudioPath;
   GeoPoint? userLocation;
   bool isRecording = false;
   bool isSubmitting = false;
-  bool isAnonymous = false; // Anonymous toggle
+  bool isAnonymous = false;
   late FlutterSoundRecorder _recorder;
 
   @override
@@ -60,6 +60,35 @@ class _ComplaintBoxScreenState extends State<ComplaintBoxScreen> {
   Future<void> _initializeRecorder() async {
     _recorder = FlutterSoundRecorder();
     await _recorder.openRecorder();
+    var status = await Permission.microphone.request();
+    if (!status.isGranted) {
+      print("Microphone permission not granted");
+    }
+  }
+
+  Future<void> _startRecording() async {
+    Directory tempDir = await getTemporaryDirectory();
+    String path = "${tempDir.path}/voice_note.aac";
+    try {
+      setState(() {
+        isRecording = true;
+      });
+      await _recorder.startRecorder(toFile: path);
+      recordedAudioPath = path;
+    } catch (e) {
+      print("Error starting recorder: $e");
+    }
+  }
+
+  Future<void> _stopRecording() async {
+    try {
+      await _recorder.stopRecorder();
+      setState(() {
+        isRecording = false;
+      });
+    } catch (e) {
+      print("Error stopping recorder: $e");
+    }
   }
 
   Future<void> _pickImage(ImageSource source) async {
@@ -77,34 +106,6 @@ class _ComplaintBoxScreenState extends State<ComplaintBoxScreen> {
       setState(() {
         selectedVideo = File(pickedVideo.path);
       });
-    }
-  }
-
-  Future<void> _startRecording() async {
-    Directory tempDir = await getTemporaryDirectory();
-    String path = "${tempDir.path}/voice_note.aac";
-    var status = await Permission.microphone.request();
-    if (status.isGranted) {
-      try {
-        setState(() {
-          isRecording = true;
-        });
-        await _recorder.startRecorder(toFile: path);
-      } catch (e) {
-        print("Error starting recorder: $e");
-      }
-    }
-  }
-
-  Future<void> _stopRecording() async {
-    try {
-      String? path = await _recorder.stopRecorder();
-      setState(() {
-        isRecording = false;
-        selectedVoice = File(path!);
-      });
-    } catch (e) {
-      print("Error stopping recorder: $e");
     }
   }
 
@@ -129,9 +130,9 @@ class _ComplaintBoxScreenState extends State<ComplaintBoxScreen> {
   }
 
   Future<void> submitComplaint() async {
-    if (messageController.text.trim().isEmpty) {
+    if (messageController.text.trim().isEmpty || selectedImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Message field cannot be empty")),
+        const SnackBar(content: Text("Message and Photo are required.")),
       );
       return;
     }
@@ -153,8 +154,8 @@ class _ComplaintBoxScreenState extends State<ComplaintBoxScreen> {
     if (selectedVideo != null) {
       uploadFutures.add(_uploadToCloudinary(selectedVideo!, "video"));
     }
-    if (selectedVoice != null) {
-      uploadFutures.add(_uploadToCloudinary(selectedVoice!, "raw"));
+    if (recordedAudioPath != null) {
+      uploadFutures.add(_uploadToCloudinary(File(recordedAudioPath!), "raw"));
     }
 
     try {
@@ -179,8 +180,8 @@ class _ComplaintBoxScreenState extends State<ComplaintBoxScreen> {
 
       await FirebaseFirestore.instance
           .collection('Municipalities')
-          .doc(widget.municipalityId) // Use the passed municipality ID
-          .collection('Complaints') // Complaints subcollection
+          .doc(widget.municipalityId)
+          .collection('Complaints')
           .add(complaint);
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -230,9 +231,13 @@ class _ComplaintBoxScreenState extends State<ComplaintBoxScreen> {
               ),
               DropdownButtonFormField<String>(
                 value: selectedType,
-                items: ["Hospital", "Fire Department", "Police", "Public Complaint"]
-                    .map((type) => DropdownMenuItem(value: type, child: Text(type)))
-                    .toList(),
+                items: [
+                  "Hospital",
+                  "Police",
+                  "Public Complaint",
+                  "Sanitation Issue",
+                  "Infrastructure Damage"
+                ].map((type) => DropdownMenuItem(value: type, child: Text(type))).toList(),
                 onChanged: (value) => setState(() => selectedType = value!),
                 decoration: const InputDecoration(
                   labelText: "Complaint Type",
@@ -252,13 +257,52 @@ class _ComplaintBoxScreenState extends State<ComplaintBoxScreen> {
               ElevatedButton.icon(
                 onPressed: () => _pickImage(ImageSource.camera),
                 icon: const Icon(Icons.camera),
-                label: const Text("Camera"),
+                label: const Text("Capture Photo"),
+              ),
+              ElevatedButton.icon(
+                onPressed: () => _pickImage(ImageSource.gallery),
+                icon: const Icon(Icons.image),
+                label: const Text("Select Photo from Gallery"),
               ),
               if (selectedImage != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 10),
                   child: Image.file(selectedImage!, height: 150, width: 150, fit: BoxFit.cover),
                 ),
+              const SizedBox(height: 10),
+              ElevatedButton.icon(
+                onPressed: () => _pickVideo(ImageSource.gallery),
+                icon: const Icon(Icons.video_library),
+                label: const Text("Select Video from Gallery (Optional)"),
+              ),
+ElevatedButton.icon(
+  onPressed: () => _pickVideo(ImageSource.camera),
+  icon: const Icon(Icons.videocam),
+  label: const Text("Capture Video (Optional)"),
+),
+              if (selectedVideo != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: Text("Video Selected: ${selectedVideo!.path.split('/').last}"),
+                ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: isRecording ? _stopRecording : _startRecording,
+                    icon: Icon(isRecording ? Icons.stop : Icons.mic),
+                    label: Text(isRecording ? "Stop Recording" : "Record Voice"),
+                  ),
+                  if (recordedAudioPath != null)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 10),
+                      child: Text(
+                        "Audio Recorded: ${recordedAudioPath!.split('/').last}",
+                        style: const TextStyle(color: Colors.blue),
+                      ),
+                    ),
+                ],
+              ),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: submitComplaint,

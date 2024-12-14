@@ -138,7 +138,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       {'title': 'Notifications', 'icon': Icons.notifications, 'route': '/notifications'},
       {'title': 'Profile', 'icon': Icons.person, 'route': '/profile'},
       {'title': 'News Feed', 'icon': Icons.feed, 'route': '/news_feed'},
-      {'title': 'History', 'icon': Icons.history, 'route': '/history'},
+      {'title': 'Complain Status', 'icon': Icons.history, 'route': '/history'},
     ];
 
     return GestureDetector(
