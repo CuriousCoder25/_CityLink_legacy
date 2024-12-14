@@ -138,20 +138,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
               mainAxisSpacing: 16,
               children: [
                 _buildDashboardCard(
-                  title: '5',
-                  subtitle: 'Total Complaints',
+                  title: 'Total Complaints',
+                  subtitle: '5',
                   color: Colors.blue,
                   icon: Icons.chat,
                 ),
                 _buildDashboardCard(
-                  title: '53',
-                  subtitle: 'Total Users',
+                  title: 'Add Events/Campaigns',
+                  subtitle: 'New Events Endorsed by the municipality',
                   color: Colors.green,
                   icon: Icons.people,
                 ),
                 _buildDashboardCard(
-                  title: '44',
-                  subtitle: 'Complaints Solved',
+                  title: 'Emeregency Alerts Issue',
+                  subtitle: 'EAS',
                   color: Colors.orange,
                   icon: Icons.check_circle,
                 ),
@@ -209,7 +209,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 8),
             TextButton(
               onPressed: () {
-                if (subtitle == 'Total Complaints') {
+                if (title == 'Total Complaints') {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
