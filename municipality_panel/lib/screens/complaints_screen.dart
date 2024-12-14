@@ -12,95 +12,148 @@ class ComplaintsScreen extends StatefulWidget {
 
 class _ComplaintsScreenState extends State<ComplaintsScreen> {
   late Stream<QuerySnapshot<Map<String, dynamic>>> _complaintsStream;
-  bool _isRefreshing = false;
+  String _selectedStatus = 'All';
 
   @override
   void initState() {
     super.initState();
-
-    // Initialize complaints stream for the given municipality ID
-_complaintsStream = FirebaseFirestore.instance
-    .collection('Municipalities')
-    .doc(widget.municipalityId) // Ensure this is correct
-    .collection('Complaints')
-    // .orderBy('createdAt', descending: true)
-    .snapshots();
-      print("Listening to complaints stream for municipalityId: ${widget.municipalityId}");
-
-_complaintsStream.listen((snapshot) {
-  print("Complaints Stream Data: ${snapshot.docs.map((doc) => doc.data())}");
-});
-
+    _complaintsStream = _getFilteredStream(_selectedStatus);
   }
 
-  // Updates the status of a complaint (mark it as resolved)
-  Future<void> _updateComplaintStatus(String complaintId) async {
+  Stream<QuerySnapshot<Map<String, dynamic>>> _getFilteredStream(String status) {
+    var query = FirebaseFirestore.instance
+        .collection('Municipalities')
+        .doc(widget.municipalityId)
+        .collection('Complaints')
+        .orderBy('submitted_at', descending: true);
+
+    if (status != 'All') {
+      query = query.where('status', isEqualTo: status.toLowerCase());
+    }
+
+    return query.snapshots();
+  }
+
+  Future<void> _updateComplaintStatus(String complaintId, String newStatus) async {
     try {
-      await FirebaseFirestore.instance
+      final complaintRef = FirebaseFirestore.instance
           .collection('Municipalities')
           .doc(widget.municipalityId)
           .collection('Complaints')
-          .doc(complaintId)
-          .update({'status': 'resolved'});
+          .doc(complaintId);
 
-      _showSnackbar('Complaint marked as resolved!');
+      await complaintRef.update({'status': newStatus, 'updated_at': Timestamp.now()});
+
+      if (newStatus == 'verified') {
+        final complaintData = await complaintRef.get();
+        final data = complaintData.data();
+        if (data != null) {
+          await FirebaseFirestore.instance.collection('NewsFeed').add({
+            'municipality_id': widget.municipalityId,
+            'title': data['message'],
+            'content': 'Complaint verified and in progress.',
+            'created_at': Timestamp.now(),
+          });
+        }
+      }
+
+      if (newStatus == 'resolved') {
+        await complaintRef.update({'reward_points': 50});
+      }
+
+      _showSnackbar('Status updated to $newStatus.');
     } catch (e) {
-      _showSnackbar('Failed to update complaint status: $e');
+      _showSnackbar('Failed to update status: $e');
     }
   }
 
-  // Refresh the complaint list manually
-  void _refreshComplaints() {
-    setState(() {
-      _isRefreshing = true;
-    });
-
-    Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        _isRefreshing = false;
-      });
-    });
-  }
-
-  // Shows a snackbar with a message
   void _showSnackbar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  // Displays individual complaint details in a card
-  Widget _buildComplaintCard(DocumentSnapshot<Map<String, dynamic>> complaint) {
-    final complaintData = complaint.data();
-    final complaintId = complaint.id;
-    final description = complaintData?['message'] ?? 'No description provided';
-    final status = complaintData?['status'] ?? 'Open';
-    final createdAt = (complaintData?['createdAt'] as Timestamp?)?.toDate();
+  void _viewComplaintDetails(DocumentSnapshot<Map<String, dynamic>> complaint) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        final data = complaint.data();
+        final isAnonymous = data?['anonymous'] ?? false;
+        final location = data?['location'];
+        final photoUrl = data?['photo_url'];
+        final videoUrl = data?['video_url'];
+        final status = data?['status'];
 
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-      child: ListTile(
-        title: Text('Complaint ID: $complaintId'),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Description: $description'),
-            const SizedBox(height: 5),
-            Text('Status: $status'),
-            if (createdAt != null)
-              Text(
-                'Reported on: ${createdAt.toLocal()}',
-                style: const TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-          ],
-        ),
-        trailing: status.toLowerCase() != 'resolved'
-            ? IconButton(
-                icon: const Icon(Icons.check_circle, color: Colors.green),
-                onPressed: () => _updateComplaintStatus(complaintId),
-              )
-            : const Icon(Icons.check_circle, color: Colors.grey),
-      ),
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Complaint ID: ${complaint.id}',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+                const SizedBox(height: 10),
+                Text('Description: ${data?['message'] ?? 'No description'}'),
+                if (!isAnonymous)
+                  Text('User ID: ${data?['user_id'] ?? 'Not available'}'),
+                if (location != null)
+                  Text('Location: Lat ${location.latitude}, Lng ${location.longitude}'),
+                if (photoUrl != null)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 10),
+                      const Text('Photo:', style: TextStyle(fontWeight: FontWeight.bold)),
+                      Image.network(photoUrl, height: 150),
+                    ],
+                  ),
+                if (videoUrl != null)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 10),
+                      const Text('Video:', style: TextStyle(fontWeight: FontWeight.bold)),
+                      TextButton(
+                        onPressed: () {
+                          // Add video viewing logic here
+                        },
+                        child: const Text('View Video'),
+                      ),
+                    ],
+                  ),
+                const SizedBox(height: 20),
+                const Text('Update Status:', style: TextStyle(fontWeight: FontWeight.bold)),
+                Wrap(
+                  spacing: 10,
+                  children: [
+                    if (status == 'pending')
+                      ElevatedButton(
+                        onPressed: () => _updateComplaintStatus(complaint.id, 'viewed'),
+                        child: const Text('Mark as Viewed'),
+                      ),
+                    if (status == 'viewed')
+                      ElevatedButton(
+                        onPressed: () => _updateComplaintStatus(complaint.id, 'verified'),
+                        child: const Text('Verify'),
+                      ),
+                    if (status == 'viewed')
+                      ElevatedButton(
+                        onPressed: () => _updateComplaintStatus(complaint.id, 'rejected'),
+                        child: const Text('Reject'),
+                      ),
+                    if (status == 'verified')
+                      ElevatedButton(
+                        onPressed: () => _updateComplaintStatus(complaint.id, 'resolved'),
+                        child: const Text('Mark as Resolved'),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -109,23 +162,26 @@ _complaintsStream.listen((snapshot) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Complaints'),
+        backgroundColor: Colors.green.shade700,
         actions: [
-          if (_isRefreshing)
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-              ),
-            )
-          else
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: _refreshComplaints,
-            ),
+          DropdownButton<String>(
+            value: _selectedStatus,
+            items: ['All', 'Pending', 'Viewed', 'Verified', 'Resolved']
+                .map((status) => DropdownMenuItem(
+                      value: status,
+                      child: Text(status),
+                    ))
+                .toList(),
+            onChanged: (status) {
+              setState(() {
+                _selectedStatus = status!;
+                _complaintsStream = _getFilteredStream(_selectedStatus);
+              });
+            },
+          ),
         ],
       ),
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        
         stream: _complaintsStream,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -133,30 +189,38 @@ _complaintsStream.listen((snapshot) {
           }
 
           if (snapshot.hasError) {
-            return Center(
-              child: Text('Error: ${snapshot.error}'),
-            );
+            return Center(child: Text('Error: ${snapshot.error}'));
           }
-
-
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(
-              child: Text('No complaints found.'),
-            );
+            return const Center(child: Text('No complaints found.'));
           }
-          
 
           final complaints = snapshot.data!.docs;
-          print('Complaints:');
-          for (var complaint in complaints) {
-            print(complaint.data());
-          }
 
           return ListView.builder(
             itemCount: complaints.length,
             itemBuilder: (context, index) {
-              return _buildComplaintCard(complaints[index]);
+              final complaint = complaints[index];
+              final isAnonymous = complaint['anonymous'] ?? false;
+
+              return Card(
+                child: ListTile(
+                  leading: Icon(
+                    Icons.report,
+                    color: complaint['status'] == 'resolved'
+                        ? Colors.green
+                        : Colors.red.shade700,
+                  ),
+                  title: Text(
+                    isAnonymous
+                        ? 'Anonymous Complaint'
+                        : 'Complaint ID: ${complaint.id}',
+                  ),
+                  subtitle: Text('Status: ${complaint['status'] ?? 'Unknown'}'),
+                  onTap: () => _viewComplaintDetails(complaint),
+                ),
+              );
             },
           );
         },
