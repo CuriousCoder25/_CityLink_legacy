@@ -1,10 +1,10 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:municipality_panel/screens/complaints_screen.dart';
 import 'package:municipality_panel/screens/dashboard_screen.dart';
 import 'firebase_options.dart';
 import 'screens/login_screen.dart';
 import 'screens/signup_screen.dart';
-import 'screens/complaints_screen.dart'; // Import the ComplaintsScreen
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,8 +25,10 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => const LoginScreen(),
+        '/signup': (context) => const SignupScreen(),
           '/dashboard': (context) => const DashboardScreen(),
-                '/complaints': (context) => ComplaintsScreen(municipalityId: 'municipalityId123'),  // Define the complaints route
+                  '/complaints': (context) => ComplaintsScreen(municipalityId: 'municipalityId123'),
+          
 
       },
     );

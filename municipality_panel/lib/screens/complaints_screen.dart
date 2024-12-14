@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ComplaintsScreen extends StatefulWidget {
   final String municipalityId;
+
   const ComplaintsScreen({super.key, required this.municipalityId});
 
   @override
@@ -12,10 +13,12 @@ class ComplaintsScreen extends StatefulWidget {
 class _ComplaintsScreenState extends State<ComplaintsScreen> {
   late Stream<QuerySnapshot> _complaintsStream;
   bool _isLoading = true;
+  bool _isRefreshing = false;  // Track if we're refreshing the list
 
   @override
   void initState() {
     super.initState();
+    // Initialize complaints stream to listen to new complaints from Firestore
     _complaintsStream = FirebaseFirestore.instance
         .collection('Municipalities')
         .doc(widget.municipalityId)
@@ -23,6 +26,7 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
         .orderBy('createdAt', descending: true)
         .snapshots();
 
+    // Set loading state to false after stream is ready
     _isLoading = false;
   }
 
@@ -44,6 +48,19 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
     }
   }
 
+  // Refresh the complaint list manually
+  void _refreshComplaints() {
+    setState(() {
+      _isRefreshing = true;
+    });
+
+    Future.delayed(const Duration(seconds: 2), () {
+      setState(() {
+        _isRefreshing = false;
+      });
+    });
+  }
+
   // Shows a snackbar with a message
   void _showSnackbar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -51,11 +68,11 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
     );
   }
 
-  // Displays individual complaint details
+  // Displays individual complaint details in a card
   Widget _buildComplaintCard(DocumentSnapshot complaint) {
     final complaintData = complaint.data() as Map<String, dynamic>;
     final complaintId = complaint.id;
-    final description = complaintData['description'] ?? '';
+    final description = complaintData['message'] ?? '';
     final status = complaintData['status'] ?? 'open';
     final createdAt = (complaintData['createdAt'] as Timestamp).toDate();
 
@@ -89,19 +106,18 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
       appBar: AppBar(
         title: const Text('Complaints'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              setState(() {
-                _isLoading = true;
-              });
-              Future.delayed(const Duration(seconds: 2), () {
-                setState(() {
-                  _isLoading = false;
-                });
-              });
-            },
-          ),
+          if (_isRefreshing)
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: _refreshComplaints,
+            ),
         ],
       ),
       body: _isLoading

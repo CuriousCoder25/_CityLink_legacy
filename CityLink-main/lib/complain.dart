@@ -151,71 +151,77 @@ class _ComplaintBoxScreenState extends State<ComplaintBoxScreen> {
       return null;
     }
   }
-
   void submitComplaint() async {
-    if (messageController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Message field cannot be empty")));
-      return;
-    }
-
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("User not logged in")));
-      return;
-    }
-
-    setState(() {
-      isSubmitting = true;
-    });
-
-    List<Future<String?>> uploadFutures = [];
-
-    if (selectedImage != null) {
-      uploadFutures.add(_uploadToCloudinary(selectedImage!, "image"));
-    }
-    if (selectedVideo != null) {
-      uploadFutures.add(_uploadToCloudinary(selectedVideo!, "video"));
-    }
-    if (selectedVoice != null) {
-      uploadFutures.add(_uploadToCloudinary(selectedVoice!, "raw"));
-    }
-
-    try {
-      final results = await Future.wait(uploadFutures);
-      final photoUrl = results.isNotEmpty ? results[0] : null;
-      final videoUrl = results.length > 1 ? results[1] : null;
-      final voiceUrl = results.length > 2 ? results[2] : null;
-
-      final complaint = {
-        "user_id": user.uid,
-        "municipality_id": "mun123",
-        "complaint_type": selectedType,
-        "message": messageController.text.trim(),
-        "photo_url": photoUrl,
-        "video_url": videoUrl,
-        "voice_url": voiceUrl,
-        "location": userLocation ?? GeoPoint(0, 0),
-        "status": "Pending",
-        "priority": 1,
-        "submitted_at": Timestamp.now(),
-        "updated_at": Timestamp.now(),
-      };
-
-      await FirebaseFirestore.instance.collection('Complaints').add(complaint);
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Complaint Submitted Successfully')));
-      Navigator.pop(context);
-    } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Error: $e")));
-    } finally {
-      setState(() {
-        isSubmitting = false;
-      });
-    }
+  if (messageController.text.trim().isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Message field cannot be empty")));
+    return;
   }
+
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("User not logged in")));
+    return;
+  }
+
+  setState(() {
+    isSubmitting = true;
+  });
+
+  List<Future<String?>> uploadFutures = [];
+
+  if (selectedImage != null) {
+    uploadFutures.add(_uploadToCloudinary(selectedImage!, "image"));
+  }
+  if (selectedVideo != null) {
+    uploadFutures.add(_uploadToCloudinary(selectedVideo!, "video"));
+  }
+  if (selectedVoice != null) {
+    uploadFutures.add(_uploadToCloudinary(selectedVoice!, "raw"));
+  }
+
+  try {
+    final results = await Future.wait(uploadFutures);
+    final photoUrl = results.isNotEmpty ? results[0] : null;
+    final videoUrl = results.length > 1 ? results[1] : null;
+    final voiceUrl = results.length > 2 ? results[2] : null;
+
+    final municipalityId = "your_municipality_id"; // Replace with dynamic value if needed
+
+    final complaint = {
+      "user_id": user.uid,
+      "complaint_type": selectedType,
+      "message": messageController.text.trim(),
+      "photo_url": photoUrl,
+      "video_url": videoUrl,
+      "voice_url": voiceUrl,
+      "location": userLocation ?? GeoPoint(0, 0),
+      "status": "Pending",
+      "priority": 1,
+      "submitted_at": Timestamp.now(),
+      "updated_at": Timestamp.now(),
+    };
+
+    // Store complaint under the relevant municipality
+    await FirebaseFirestore.instance
+        .collection('Municipalities')
+        .doc(municipalityId)
+        .collection('Complaints')
+        .add(complaint);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Complaint Submitted Successfully')));
+    Navigator.pop(context);
+  } catch (e) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text("Error: $e")));
+  } finally {
+    setState(() {
+      isSubmitting = false;
+    });
+  }
+}
 
   @override
   void dispose() {
