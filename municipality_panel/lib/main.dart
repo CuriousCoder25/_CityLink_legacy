@@ -24,6 +24,7 @@ class MyApp extends StatelessWidget {
 
     return MaterialApp(
       title: 'Municipality Panel',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.blue),
       initialRoute: '/',
       routes: {
