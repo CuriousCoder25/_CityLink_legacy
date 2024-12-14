@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class myPhone extends StatefulWidget {
-  const myPhone({super.key});
+class MyPhone extends StatefulWidget {
+  const MyPhone({super.key});
 
   @override
-  State<myPhone> createState() => _myPhoneState();
+  State<MyPhone> createState() => _MyPhoneState();
 }
 
-class _myPhoneState extends State<myPhone> {
-  final _countryCodeController =
-      TextEditingController(text: '+977'); // Default country code
+class _MyPhoneState extends State<MyPhone> {
+  final _countryCodeController = TextEditingController(text: '+977');
   final _phoneNumberController = TextEditingController();
   String _verificationId = '';
 
@@ -56,33 +55,59 @@ class _myPhoneState extends State<myPhone> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 25),
+        padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 30),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Image.asset('assets/img1.png', width: 150, height: 150),
-            const SizedBox(height: 25),
-            const Text('Phone Verification',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
-            const Text(
-              'We need to register your phone before starting',
-              style: TextStyle(fontSize: 16),
-              textAlign: TextAlign.center,
+            Image.asset(
+              'assets/img1.png',
+              width: 150,
+              height: 150,
             ),
             const SizedBox(height: 30),
+            const Text(
+              'Phone Verification',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 10),
+Center(
+  child: Text(
+    'We need to register your phone before starting',
+    style: TextStyle(
+      fontSize: 16,
+      color: Colors.grey,
+    ),
+    textAlign: TextAlign.center, // Remove this line
+  ),
+),
+            const SizedBox(height: 40),
             _buildPhoneInput(),
             const SizedBox(height: 30),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green.shade700,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 15),
+                minimumSize: const Size(double.infinity, 50),
               ),
               onPressed: _sendOtp,
-              child:
-                  const Text('Send OTP', style: TextStyle(color: Colors.white)),
+              child: const Text(
+                'Send OTP',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ],
         ),
@@ -92,31 +117,48 @@ class _myPhoneState extends State<myPhone> {
 
   Widget _buildPhoneInput() {
     return Container(
-      height: 55,
+      height: 60,
       decoration: BoxDecoration(
-        border: Border.all(width: 1, color: Colors.grey),
-        borderRadius: BorderRadius.circular(10),
+        border: Border.all(width: 1, color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.shade200,
+            blurRadius: 8,
+            spreadRadius: 2,
+          ),
+        ],
       ),
       child: Row(
         children: [
-          const SizedBox(width: 10),
+          const SizedBox(width: 15),
           SizedBox(
-            width: 40,
+            width: 60,
             child: TextField(
               controller: _countryCodeController,
-              decoration: const InputDecoration(border: InputBorder.none),
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(vertical: 18),
+              ),
+              style: const TextStyle(fontSize: 16),
             ),
           ),
-          const SizedBox(width: 10),
-          const Text("|", style: TextStyle(fontSize: 33, color: Colors.grey)),
-          const SizedBox(width: 10),
+          const Text(
+            " | ",
+            style: TextStyle(fontSize: 28, color: Colors.grey),
+          ),
+          const SizedBox(width: 15),
           Expanded(
             child: TextField(
               controller: _phoneNumberController,
               decoration: const InputDecoration(
                 border: InputBorder.none,
-                hintText: 'Phone',
+                hintText: 'Phone Number',
+                hintStyle: TextStyle(color: Colors.grey),
+                contentPadding: EdgeInsets.symmetric(vertical: 18),
               ),
+              keyboardType: TextInputType.phone,
+              style: const TextStyle(fontSize: 16),
             ),
           ),
         ],
