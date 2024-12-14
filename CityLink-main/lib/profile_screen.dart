@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -14,7 +15,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final _formKey = GlobalKey<FormState>();
-  String? _name, _surname, _phoneNumber, _profilePictureUrl;
+  String? _name, _surname, _phoneNumber, _profilePictureUrl, _municipalityName;
   File? _selectedImage;
   bool _isLoading = true;
 
@@ -32,21 +33,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     try {
+      // Fetch user document from Firestore
       final userDoc = await FirebaseFirestore.instance.collection('Users').doc(user.uid).get();
+
       if (userDoc.exists) {
         final data = userDoc.data();
+        final municipalityId = data?['1234567'];
+
         setState(() {
           _name = data?['name'] ?? 'N/A';
           _surname = data?['surname'] ?? 'N/A';
           _phoneNumber = data?['phone_number'] ?? 'N/A';
           _profilePictureUrl = data?['profile_picture_url'];
-          _isLoading = false;
         });
+
+        if (municipalityId != null) {
+          // Fetch municipality name from Firestore
+          final municipalityDoc = await FirebaseFirestore.instance.collection('Municipalities').doc(municipalityId).get();
+          if (municipalityDoc.exists) {
+            setState(() {
+              _municipalityName = municipalityDoc.data()?['name'] ?? 'N/A';
+            });
+          }
+        }
       } else {
         _showError("User data not found!");
       }
     } catch (e) {
       _showError("Failed to fetch user data: $e");
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -58,6 +76,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     try {
       String? newProfilePictureUrl = _profilePictureUrl;
+
       if (_selectedImage != null) {
         newProfilePictureUrl = await _uploadImage(_selectedImage!);
       }
@@ -80,27 +99,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-Future<String> _uploadImage(File image) async {
-  const cloudinaryUrl = "https://api.cloudinary.com/v1_1/dtlmvwa2q/image/upload";
-  const uploadPreset = "unsigned-preset";
+  Future<String> _uploadImage(File image) async {
+    const cloudinaryUrl = "https://api.cloudinary.com/v1_1/dtlmvwa2q/image/upload";
+    const uploadPreset = "unsigned-preset";
 
-  try {
-    final request = http.MultipartRequest('POST', Uri.parse(cloudinaryUrl));
-    request.fields['upload_preset'] = uploadPreset;
-    request.files.add(await http.MultipartFile.fromPath('file', image.path));
+    try {
+      final request = http.MultipartRequest('POST', Uri.parse(cloudinaryUrl));
+      request.fields['upload_preset'] = uploadPreset;
+      request.files.add(await http.MultipartFile.fromPath('file', image.path));
 
-    final response = await request.send();
-    if (response.statusCode == 200) {
-      final responseData = await response.stream.bytesToString();
-      final jsonResponse = json.decode(responseData);
-      return jsonResponse['secure_url']; // The URL of the uploaded image
-    } else {
-      throw Exception("Failed to upload image");
+      final response = await request.send();
+      if (response.statusCode == 200) {
+        final responseData = await response.stream.bytesToString();
+        final jsonResponse = json.decode(responseData);
+        return jsonResponse['secure_url']; // The URL of the uploaded image
+      } else {
+        throw Exception("Failed to upload image");
+      }
+    } catch (e) {
+      throw Exception("Image upload error: $e");
     }
-  } catch (e) {
-    throw Exception("Image upload error: $e");
   }
-}
 
   Future<void> _pickImage() async {
     final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
@@ -147,6 +166,11 @@ Future<String> _uploadImage(File image) async {
                       ),
                     ),
                     const SizedBox(height: 20),
+                    if (_municipalityName != null)
+                      ListTile(
+                        leading: const Icon(Icons.location_city),
+                        title: Text("Municipality: $_municipalityName"),
+                      ),
                     TextFormField(
                       initialValue: _name,
                       decoration: const InputDecoration(labelText: 'Name'),

@@ -10,6 +10,7 @@ class NotificationsScreen extends StatelessWidget {
     return FirebaseFirestore.instance
         .collection('Notifications')
         .where('user_id', isEqualTo: userId)
+        .where('municipality_id', isEqualTo: "1234567") // Fixed municipality ID
         .orderBy('created_at', descending: true)
         .limit(20) // Fetch notifications in batches (optional for pagination)
         .snapshots();
@@ -21,6 +22,7 @@ class NotificationsScreen extends StatelessWidget {
       final notifications = await FirebaseFirestore.instance
           .collection('Notifications')
           .where('user_id', isEqualTo: userId)
+          .where('municipality_id', isEqualTo: "1234567") // Fixed municipality ID
           .get();
 
       for (var notification in notifications.docs) {
