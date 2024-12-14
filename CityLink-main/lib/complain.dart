@@ -172,7 +172,7 @@ class _ComplaintBoxScreenState extends State<ComplaintBoxScreen> {
         "video_url": videoUrl,
         "voice_url": voiceUrl,
         "location": userLocation ?? GeoPoint(0, 0),
-        "status": "Pending",
+        "status": "",
         "submitted_at": Timestamp.now(),
         "updated_at": Timestamp.now(),
       };
