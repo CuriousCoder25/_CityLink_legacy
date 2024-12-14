@@ -135,8 +135,8 @@ void _viewComplaintDetails(DocumentSnapshot<Map<String, dynamic>> complaint) {
                 children: [
                   if (status == 'pending')
                     ElevatedButton(
-                      onPressed: () => _updateComplaintStatus(complaint.id, 'viewed'),
-                      child: const Text('Mark as Viewed'),
+                      onPressed: () => _updateComplaintStatus(complaint.id, 'resolved'),
+                      child: const Text('Mark as Resolved'),
                     ),
                   if (status == 'viewed')
                     ElevatedButton(
@@ -150,17 +150,18 @@ void _viewComplaintDetails(DocumentSnapshot<Map<String, dynamic>> complaint) {
                     ),
                   if (status == 'verified')
                     ElevatedButton(
-                      onPressed: () => _updateComplaintStatus(complaint.id, 'resolved'),
-                      child: const Text('Mark as Resolved'),
+                      onPressed: () => _updateComplaintStatus(complaint.id, 'Pending'),
+                      child: const Text('Mark as Pending'),
                     ),
                   // Add a default button for unexpected cases
-                  if (status != 'pending' &&
+                  if (
                       status != 'viewed' &&
                       status != 'verified' &&
+                      status != 'pending' &&
                       status != 'resolved')
                     ElevatedButton(
-                      onPressed: () => _updateComplaintStatus(complaint.id, 'pending'),
-                      child: const Text('Reset to Pending'),
+                      onPressed: () => _updateComplaintStatus(complaint.id, 'viewed'),
+                      child: const Text('Reset to Viewed'),
                     ),
                 ],
               ),
@@ -181,7 +182,7 @@ void _viewComplaintDetails(DocumentSnapshot<Map<String, dynamic>> complaint) {
         actions: [
           DropdownButton<String>(
             value: _selectedStatus,
-            items: ['All', 'Pending', 'Viewed', 'Verified', 'Resolved']
+            items: ['All',  'Viewed', 'Verified','Pending', 'Resolved']
                 .map((status) => DropdownMenuItem(
                       value: status,
                       child: Text(status),
