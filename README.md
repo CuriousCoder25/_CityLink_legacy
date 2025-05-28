@@ -59,4 +59,4 @@ Please read the Contributor Agreement before contributing.
 
 
 ### Contact
-For inquiries, please **contact: gaurav.email@example.com**
+For inquiries, please **contact: gauravkathayat12@gmail.com**
