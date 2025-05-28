@@ -1,6 +1,6 @@
 # City Link: Urban Management and Complaint System
 
-**City Link** is a mobile and web application that helps citizens report issues in their cities, such as broken streetlights, potholes, and other urban problems. It helps local governments solve problems faster and more efficiently.
+**City Link** is a mobile and web application that helps citizens report issues in their cities, such as broken streetlights, potholes, and other urban problems. It helps local governments solve problems faster and more efficiently while ensuring inclusivity, accountability, transperancy and democratizing the e-governance.
 
 ---
 
