@@ -2,10 +2,16 @@
 
 **City Link** is a mobile and web application that helps citizens report issues in their cities, such as broken streetlights, potholes, and other urban problems. It helps local governments solve problems faster and more efficiently.
 
+---
+
 ### Developed by:
 
-- Gaurav Kathayat - Developer, City Link (Team Lead)
-- Jeevan Joshi - Developer, City Link
+- **Gaurav Kathayat** – Developer, City Link (Team Lead)  
+- Jeevan Joshi – Developer, City Link  
+
+> Note: Gaurav Kathayat is the sole owner and maintainer of this project. See [Contributor Agreement](CONTRIBUTOR_AGREEMENT.md) for details.
+
+---
 
 ## Features
 
@@ -15,6 +21,8 @@
 - Receive notifications about emergencies like floods or fires.
 - View city-wide statistics on complaints and progress.
 
+---
+
 ## Tech Stack
 
 This project uses the following technologies:
@@ -23,19 +31,20 @@ This project uses the following technologies:
 - **Firebase** for real-time data storage and notifications.
 - **Google Maps API** for location-based features.
 
+---
+
 ## Getting Started
 
 ### Prerequisites
 
 Before running the project, make sure you have the following installed:
 
-1. [Flutter](https://flutter.dev/docs/get-started/install)
+1. [Flutter](https://flutter.dev/docs/get-started/install)  
 2. [Firebase](https://firebase.flutter.dev/docs/overview)
 
 ### How to Set Up
 
-1. **Clone the Repository**:
-   Open your terminal and run:
+1. **Clone the Repository**:  
    ```bash
    git clone https://github.com/your-username/city-link.git
    cd city-link
