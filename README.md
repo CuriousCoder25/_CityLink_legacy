@@ -48,3 +48,10 @@ Before running the project, make sure you have the following installed:
    ```bash
    git clone https://github.com/your-username/city-link.git
    cd city-link
+
+###License and Ownership
+**© 2025 Gaurav Kathayat. All rights reserved.**
+
+This repository, including all code, designs, and documentation, is the sole intellectual property of Gaurav Kathayat. Unauthorized use, reproduction, or distribution is prohibited.
+
+Please read the Contributor Agreement before contributing.
