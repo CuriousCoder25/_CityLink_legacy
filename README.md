@@ -55,7 +55,7 @@ Before running the project, make sure you have the following installed:
 
 This repository, including all code, designs, and documentation, is the sole intellectual property of Gaurav Kathayat. Unauthorized use, reproduction, or distribution is prohibited.
 
-Please read the Contributor Agreement before contributing.
+Please read the [Contributor Agreement](CONTRIBUTOR_AGREEMENT.md) before contributing.
 
 
 ### Contact
