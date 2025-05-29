@@ -48,6 +48,11 @@ Before running the project, make sure you have the following installed:
    ```bash
    git clone https://github.com/your-username/city-link.git
    cd city-link
+2. **Run the app
+   ```bash
+   flutter run
+   ```
+
 
 ### License and Ownership
 
