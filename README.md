@@ -16,7 +16,7 @@
 ## Features
 
 - Report problems with photos and videos.
-- Automatically send complaints to the right local government.
+- Automatically send complaints to the right local government panel.
 - Track the status of complaints.
 - Receive notifications about emergencies like floods or fires.
 - View city-wide statistics on complaints and progress.
@@ -48,7 +48,7 @@ Before running the project, make sure you have the following installed:
    ```bash
    git clone https://github.com/your-username/city-link.git
    cd city-link
-2. **Run the app
+2. **Run the app**
    ```bash
    flutter run
    ```
