@@ -10,7 +10,7 @@
 - Jeevan Joshi – Initial Hackathon Contributor, Developer
  
 
-> Note: Gaurav Kathayat is the sole owner and maintainer of this project. See  See [LICENSE](LICENSE) and [Contributor Agreement](CONTRIBUTOR_AGREEMENT.md) for details.
+> Note: Gaurav Kathayat is the sole owner and maintainer of this project. See [LICENSE](LICENSE) and [Contributor Agreement](CONTRIBUTOR_AGREEMENT.md) for details.
 
 ---
 
