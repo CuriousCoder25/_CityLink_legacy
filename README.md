@@ -6,8 +6,9 @@
 
 ### Developed by:
 
-- **Gaurav Kathayat** – Developer, City Link (Team Lead)  
-- Jeevan Joshi – Developer, City Link  
+- **Gaurav Kathayat** – Team Lead, Lead Developer, and Current Maintainer  
+- Jeevan Joshi – Initial Hackathon Contributor
+ 
 
 > Note: Gaurav Kathayat is the sole owner and maintainer of this project. See [Contributor Agreement](CONTRIBUTOR_AGREEMENT.md) for details.
 
