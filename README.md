@@ -57,9 +57,9 @@ Before running the project, make sure you have the following installed:
 
 ### License and Ownership
 
-**© 2025 Gaurav Kathayat. All rights reserved.**
-
-This repository, including all code, designs, and documentation, is the sole intellectual property of Gaurav Kathayat. Unauthorized use, reproduction, or distribution is prohibited.
+This project is **source-available** under the **GK-SAL 1.0 License**.  
+You may view, run, and modify the code **locally**, but **redistribution and commercial use are strictly prohibited**.  
+For commercial licensing, contact: gauravkathayat945@gmail.com
 
 Please read the [Contributor Agreement](CONTRIBUTOR_AGREEMENT.md) before contributing.
 
