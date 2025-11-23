@@ -1,25 +1,64 @@
-# Copyright (c) 2025 Gaurav Kathayat
+Copyright (c) 2025, Gaurav Kathayat
+All rights reserved.
 
-**All rights reserved.**
+This software, including all source code, binaries, documentation, and
+related materials (“Software”), is made available solely for personal,
+private, and noncommercial use.
 
----
+You are granted a limited, revocable, nonexclusive license to:
 
-## Proprietary Software License Agreement
+1. VIEW the Software.
+2. RUN the Software locally for personal or educational purposes.
+3. MODIFY the Software locally for the purpose of learning,
+   experimentation, or submitting contributions.
+4. CREATE and submit contributions (patches, pull requests, or fixes)
+   to this repository.
 
-This software and its associated materials are the exclusive property of **Gaurav Kathayat**.  
-No part of this software may be copied, modified, distributed, or used in any form  
-without explicit written permission from the copyright owner.
+### 1. Ownership of Contributions
+By submitting a contribution, you agree that:
+- You assign all rights, title, and interest in your contribution to the
+  copyright owner.
+- You retain no rights to your contribution or to any derivative of it.
+- Submitting a contribution does NOT grant you any additional license to
+  use the Software.
 
-Use of this software is subject to a paid licensing agreement, which must be obtained  
-from the copyright owner prior to any commercial or public use.
+### 2. Strictly Prohibited Actions
+You may NOT, under any circumstances:
 
-Unauthorized use, reproduction, or distribution of this software or any portion thereof  
-is strictly prohibited and may result in legal action.
+- Distribute, publish, upload, or broadcast the Software (or any
+  modified version) to any wide audience, whether publicly or privately.
+- Use the Software for commercial purposes.
+- Provide the Software to any third party.
+- Host the Software online or as part of a product or service.
+- Sell, license, sublicense, or otherwise monetize the Software.
+- Create derivative works intended for distribution.
+- Reverse engineer, decompile, or extract code from compiled components
+  outside of allowed local experimentation.
 
----
+### 3. Commercial Use
+Any commercial, organizational, or revenue-generating use of the 
+Software requires a separate **paid commercial license agreement** with 
+the copyright owner.
 
-### Licensing Inquiries
+### 4. Redistribution Ban (Important)
+Redistribution in ANY form is prohibited, including but not limited to:
+- Public repositories or forks
+- Git mirrors or Gists
+- Posting code snippets online
+- Sharing compiled binaries or partial source code
+- Bundling the Software with other tools
+- Including any part of the Software in training datasets
 
-For licensing inquiries, please contact:  
-**Gaurav Kathayat**  
-Email: [gauravkathayat12@gmail.com](mailto:gauravkathayat12@gmail.com)
+Only **private, local use** is permitted.
+
+### 5. Warranty Disclaimer
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE, AND NON-INFRINGEMENT. IN NO EVENT SHALL THE AUTHOR
+BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM THE
+SOFTWARE OR ITS USE.
+
+### 6. Contact
+For commercial licensing or special permissions:
+Gaurav Kathayat  
+Email: gaura…@gmail.com
