@@ -1,4 +1,5 @@
 # City Link: Urban Management and Complaint System
+![License: GK-SAL 1.0](https://img.shields.io/badge/License-GK--SAL%201.0-yellow.svg)
 
 **City Link** is a mobile and web application that helps citizens report issues in their cities, such as broken streetlights, potholes, and other urban problems. It helps local governments solve problems faster and more efficiently while ensuring inclusivity, accountability, transperancy and democratizing the e-governance.
 
