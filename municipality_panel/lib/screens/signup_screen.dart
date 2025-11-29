@@ -67,7 +67,7 @@ Future<void> _signup() async {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (context) => MapScreen(municipalityId: fixedMunicipalityId),
+        builder: (context) => const MapScreen(municipalityId: fixedMunicipalityId),
       ),
     );
   } catch (e) {

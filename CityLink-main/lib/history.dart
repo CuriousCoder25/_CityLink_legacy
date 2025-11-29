@@ -55,7 +55,6 @@ class _ComplaintHistoryScreenState extends State<ComplaintHistoryScreen> {
 
                 var complaints = snapshot.data!.docs.where((doc) {
                   final data = doc.data();
-                  if (data == null) return false;
 
                   final statusMatches =
                       filterStatus == "All" || data['status'] == filterStatus;

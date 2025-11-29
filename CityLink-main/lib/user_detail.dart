@@ -15,7 +15,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
   final _formKey = GlobalKey<FormState>();
   String? _firstName, _lastName, _email, _citizenshipNumber;
   bool _isSaving = false;
-  TextEditingController _phoneNumberController = TextEditingController();
+  final TextEditingController _phoneNumberController = TextEditingController();
 
   @override
   void didChangeDependencies() {

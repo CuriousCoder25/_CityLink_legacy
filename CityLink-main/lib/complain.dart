@@ -230,7 +230,7 @@ class _ComplaintBoxScreenState extends State<ComplaintBoxScreen> {
                 ],
               ),
               DropdownButtonFormField<String>(
-                value: selectedType,
+                initialValue: selectedType,
                 items: [
                   "Hospital",
                   "Police",
